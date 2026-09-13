@@ -3084,6 +3084,37 @@
     }
 
   
+
+
+/* =====================================================
+   ADMIN FEEDBACK / ANALYSIS / ANNOUNCEMENTS
+===================================================== */
+.admin-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+.admin-panel{background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+.admin-panel-wide{grid-column:1/-1}
+.admin-panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.admin-panel-title{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-weight:800;font-size:16px}
+.admin-panel-title .admin-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--primary-light);color:var(--primary)}
+.admin-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.admin-form-grid .full{grid-column:1/-1}
+.admin-action-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.admin-report-card{border:1px solid #e2e8f0;border-radius:14px;padding:13px;margin-top:10px;background:#fbfdfc}
+.admin-report-card:hover{border-color:#a7f3d0}
+.admin-report-meta{font-size:11px;color:#64748b;margin-top:4px}
+.admin-report-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.analysis-history-list{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto}
+.analysis-history-item{border:1px solid var(--border);border-radius:14px;padding:13px;background:#fff}
+.analysis-history-item strong{font-size:13px}
+.analysis-history-item p{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5}
+.analysis-history-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.announcement-box{border:1px solid #dbeafe;background:linear-gradient(135deg,#eff6ff,#ffffff);border-radius:15px;padding:15px;margin-top:12px}
+.announcement-list{display:flex;flex-direction:column;gap:10px;margin-top:12px;max-height:320px;overflow:auto}
+.announcement-item{border:1px solid var(--border);border-radius:13px;padding:12px;background:white}
+.announcement-item strong{font-size:13px}.announcement-item p{font-size:12px;color:#475569;margin-top:5px;white-space:pre-wrap}
+.analysis-chart-wrap{position:relative;height:310px;margin-top:18px;padding:8px;border:1px solid #eef2f7;border-radius:15px;background:#fcfefd}
+.admin-help{font-size:11px;color:#64748b;line-height:1.5;margin-top:7px}
+@media(max-width:900px){.admin-tools-grid{grid-template-columns:1fr}.admin-panel-wide{grid-column:auto}.admin-form-grid{grid-template-columns:1fr}.admin-form-grid .full{grid-column:auto}}
+
     /* =====================================================
        LANGUAGE SETTINGS
     ====================================================== */
@@ -3895,6 +3926,129 @@
 
       </div>
 
+      <!-- =====================================================
+           ADMIN FEEDBACK / ANALYSIS / ANNOUNCEMENTS
+      ====================================================== -->
+      <div class="admin-tools-grid">
+
+        <div class="admin-panel admin-panel-wide">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title">
+              <span class="admin-icon"><i data-lucide="message-square-more"></i></span>
+              <span>Admin Review & Feedback</span>
+            </div>
+            <span class="text-muted">Subiza kuri report yatanzwe</span>
+          </div>
+          <div class="admin-form-grid">
+            <div class="form-group full">
+              <label for="adminReviewReport">Report wahisemo</label>
+              <select id="adminReviewReport" onchange="loadAdminReviewReport()">
+                <option value="">-- Hitamo report --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Service</label>
+              <input id="adminReviewService" readonly placeholder="Service">
+            </div>
+            <div class="form-group">
+              <label>Reporter Email</label>
+              <input id="adminReviewEmail" readonly placeholder="Email">
+            </div>
+            <div class="form-group full">
+              <label for="adminReviewText">Uko Admin abibona / Review</label>
+              <textarea id="adminReviewText" rows="4" placeholder="Andika uko ubona report..." ></textarea>
+            </div>
+            <div class="form-group full">
+              <label for="adminReviewAdvice">Inama / Recommendations</label>
+              <textarea id="adminReviewAdvice" rows="4" placeholder="Andika inama Admin atanga..."></textarea>
+            </div>
+          </div>
+          <div class="admin-action-row">
+            <button class="btn-primary" onclick="saveAdminReview()"><i data-lucide="save"></i> Bika Review</button>
+            <button class="btn-primary-outline" onclick="shareSelectedReview()"><i data-lucide="send"></i> Ohereza kuri Email</button>
+          </div>
+          <p class="admin-help">Review ibikwa kuri report, kandi share ishobora kohereza review n'inama kuri email ya reporter.</p>
+        </div>
+
+        <div class="admin-panel admin-panel-wide">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title">
+              <span class="admin-icon"><i data-lucide="chart-no-axes-combined"></i></span>
+              <span>Analysis Studio</span>
+            </div>
+            <span class="text-muted">Charts • Lines • Diagrams</span>
+          </div>
+          <div class="admin-form-grid">
+            <div class="form-group">
+              <label for="analysisService">Service</label>
+              <select id="analysisService" onchange="populateAnalysisMetrics()"><option value="all">All Services</option></select>
+            </div>
+            <div class="form-group">
+              <label for="analysisMetric">Metric / Field</label>
+              <select id="analysisMetric"><option value="">Hitamo field</option></select>
+            </div>
+            <div class="form-group">
+              <label for="analysisChartType">Chart Type</label>
+              <select id="analysisChartType">
+                <option value="bar">Bar Chart</option>
+                <option value="line">Line Chart</option>
+                <option value="doughnut">Diagram / Doughnut</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="analysisTitle">Analysis Title</label>
+              <input id="analysisTitle" placeholder="Urugero: Daily OPD Trend">
+            </div>
+          </div>
+          <div class="admin-action-row">
+            <button class="btn-primary" onclick="runAnalysis()"><i data-lucide="play"></i> Kora Analysis</button>
+            <button class="btn-secondary" onclick="saveAnalysisHistory()"><i data-lucide="bookmark"></i> Bika Analysis</button>
+            <button class="btn-primary-outline" onclick="shareCurrentAnalysis()"><i data-lucide="mail"></i> Share Analysis</button>
+          </div>
+          <div class="analysis-chart-wrap">
+            <canvas id="adminAnalysisChart"></canvas>
+          </div>
+          <p id="analysisSummary" class="admin-help">Hitamo service na metric, uhitemo chart, hanyuma ukande Kora Analysis.</p>
+        </div>
+
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title"><span class="admin-icon"><i data-lucide="history"></i></span><span>Analysis History</span></div>
+          </div>
+          <div id="analysisHistoryList" class="analysis-history-list"></div>
+        </div>
+
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title"><span class="admin-icon"><i data-lucide="megaphone"></i></span><span>Amatangazo</span></div>
+          </div>
+          <div class="form-group">
+            <label for="announcementTitle">Umutwe w'itangazo</label>
+            <input id="announcementTitle" placeholder="Umutwe">
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label for="announcementMessage">Ubutumwa</label>
+            <textarea id="announcementMessage" rows="4" placeholder="Andika itangazo..."></textarea>
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label for="announcementAudience">Abagenerwa</label>
+            <select id="announcementAudience">
+              <option value="all">Abantu bose batanze reports</option>
+              <option value="selected">Reporter wahisemo</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label for="announcementEmail">Email yihariye (niba wahisemo Reporter)</label>
+            <input id="announcementEmail" type="email" placeholder="reporter@example.com">
+          </div>
+          <div class="admin-action-row">
+            <button class="btn-primary" onclick="sendAnnouncement()"><i data-lucide="send"></i> Ohereza Itangazo</button>
+          </div>
+          <div id="announcementList" class="announcement-list"></div>
+        </div>
+
+      </div>
+
     </section>
 
 
@@ -4469,8 +4623,8 @@
         </div>
 
         <div>
-          <h3 class="modal-title">Guhindura Ururimi</h3>
-          <p class="modal-desc">Hitamo ururimi ushaka gukoresha muri system.</p>
+          <h3 class="modal-title" id="modalLanguageTitle">Guhindura Ururimi</h3>
+          <p class="modal-desc" id="modalLanguageDesc">Hitamo ururimi ushaka gukoresha muri system.</p>
         </div>
 
       </div>
@@ -4497,7 +4651,7 @@
           <span class="language-choice-icon">🇷🇼</span>
           <span>
             <strong>Kinyarwanda</strong>
-            <small>Ururimi rw'u Rwanda</small>
+            <small id="settingsRwSmall">Ururimi rw'u Rwanda</small>
           </span>
           <i data-lucide="check-circle-2"></i>
         </button>
@@ -4511,7 +4665,7 @@
           <span class="language-choice-icon">🇬🇧</span>
           <span>
             <strong>English</strong>
-            <small>English language</small>
+            <small id="settingsEnSmall">English language</small>
           </span>
           <i data-lucide="circle"></i>
         </button>
@@ -4527,7 +4681,7 @@
         onclick="closeLanguageModal()"
       >
         <i data-lucide="check"></i>
-        Done
+        <span id="btnLanguageDone">Done</span>
       </button>
 
     </div>
@@ -4547,7 +4701,7 @@
       <div class="modal-title-wrap">
         <div class="modal-icon-badge emerald"><i data-lucide="shield-check"></i></div>
         <div>
-          <h3 class="modal-title">Dashboard Login</h3>
+          <h3 class="modal-title" id="dashboardLoginTitle">Dashboard Login</h3>
           <p class="modal-desc">Injiza username na password bya Admin kugira ngo ubone Dashboard.</p>
         </div>
       </div>
@@ -4903,7 +5057,8 @@
  */
 
 let API_URL =
-  localStorage.getItem("nasho_api_url") || "";
+  localStorage.getItem("nasho_api_url") ||
+  "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
 
 // Report waiting for final confirmation from the review window
 let pendingReport = null;
@@ -4923,6 +5078,9 @@ let selectedService = "";
 let uploadedImageData = "";
 
 let serviceChart = null;
+let adminAnalysisChart = null;
+let currentAnalysisData = null;
+let currentAnalysisTitle = "";
 
 
 
@@ -6336,6 +6494,220 @@ function loadStoredReports(){
 
 
 /* =====================================================
+   ADMIN REVIEW / ANALYSIS / ANNOUNCEMENTS
+===================================================== */
+
+function getReportById(id){
+  return reports.find(r => String(r.id) === String(id)) || null;
+}
+
+function populateAdminReportSelect(){
+  const select = document.getElementById("adminReviewReport");
+  if(!select) return;
+  const previous = select.value;
+  select.innerHTML = '<option value="">-- Hitamo report --</option>' +
+    [...reports].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt)).map(r=>
+      `<option value="${escapeHtml(r.id)}">${escapeHtml(r.id)} • ${escapeHtml(r.service||"Other")} • ${escapeHtml(r.reporterName||"")}</option>`
+    ).join("");
+  if(previous && getReportById(previous)) select.value = previous;
+}
+
+function loadAdminReviewReport(){
+  const id = document.getElementById("adminReviewReport")?.value;
+  const report = getReportById(id);
+  if(!report) return;
+  setText("adminReviewService", report.service || "");
+  const email = document.getElementById("adminReviewEmail");
+  if(email) email.value = report.reporterEmail || "";
+  const review = report.adminReview || {};
+  const reviewText = document.getElementById("adminReviewText");
+  const advice = document.getElementById("adminReviewAdvice");
+  if(reviewText) reviewText.value = review.review || "";
+  if(advice) advice.value = review.advice || "";
+}
+
+function saveAdminReview(showMessage=true){
+  const id = document.getElementById("adminReviewReport")?.value;
+  const report = getReportById(id);
+  if(!report){ showToast("Banza uhitemo report.","error"); return false; }
+  report.adminReview = {
+    review: document.getElementById("adminReviewText")?.value.trim() || "",
+    advice: document.getElementById("adminReviewAdvice")?.value.trim() || "",
+    reviewedBy: DASHBOARD_USERNAME,
+    reviewedAt: new Date().toISOString()
+  };
+  saveReports();
+  if(showMessage) showToast("Review n'inama bibitswe kuri report.","success");
+  return true;
+}
+
+async function shareSelectedReview(){
+  const id = document.getElementById("adminReviewReport")?.value;
+  const report = getReportById(id);
+  if(!report){ showToast("Hitamo report mbere.","error"); return; }
+  if(!saveAdminReview(false)) return;
+  if(!report.reporterEmail || !isValidEmail(report.reporterEmail)){
+    showToast("Iyi report nta email yemewe ifite.","error"); return;
+  }
+  try{
+    await postAdminAction("share_report_review", { report });
+    showToast("Review yasabwe koherezwa kuri email ya reporter.","success");
+  }catch(e){
+    console.error(e);
+    showToast("Habaye ikibazo mu kohereza review.","error");
+  }
+}
+
+function populateAnalysisServices(){
+  const select = document.getElementById("analysisService");
+  if(!select) return;
+  const previous = select.value || "all";
+  const services = [...new Set(reports.map(r=>r.service).filter(Boolean))].sort();
+  select.innerHTML = '<option value="all">All Services</option>' + services.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+  select.value = services.includes(previous) ? previous : "all";
+  populateAnalysisMetrics();
+}
+
+function populateAnalysisMetrics(){
+  const serviceFilter = document.getElementById("analysisService")?.value || "all";
+  const select = document.getElementById("analysisMetric");
+  if(!select) return;
+  const pool = reports.filter(r=>serviceFilter === "all" || r.service === serviceFilter);
+  const fields = {};
+  pool.forEach(r=>Object.entries(r.serviceData || {}).forEach(([key,val])=>{
+    if(val !== "" && !isNaN(Number(val))) fields[key] = true;
+  }));
+  const keys = Object.keys(fields).sort();
+  select.innerHTML = '<option value="">Hitamo field</option>' + keys.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join("");
+}
+
+function runAnalysis(){
+  const serviceFilter = document.getElementById("analysisService")?.value || "all";
+  const metric = document.getElementById("analysisMetric")?.value || "";
+  const chartType = document.getElementById("analysisChartType")?.value || "bar";
+  const titleInput = document.getElementById("analysisTitle")?.value.trim();
+  if(!metric){ showToast("Hitamo metric/field mbere yo gukora analysis.","error"); return; }
+  const pool = reports.filter(r=>serviceFilter === "all" || r.service === serviceFilter)
+    .sort((a,b)=>new Date(a.date||a.submittedAt)-new Date(b.date||b.submittedAt));
+  const rows = pool.map(r=>({
+    label: formatDate(r.date),
+    value: Number(r.serviceData?.[metric] || 0),
+    report:r
+  }));
+  if(!rows.length){ showToast("Nta data ihagije kuri iyi metric.","error"); return; }
+  currentAnalysisTitle = titleInput || `${metric} Analysis`;
+  currentAnalysisData = { serviceFilter, metric, chartType, title: currentAnalysisTitle, rows, createdAt:new Date().toISOString() };
+  if(adminAnalysisChart) adminAnalysisChart.destroy();
+  const canvas = document.getElementById("adminAnalysisChart");
+  if(!canvas) return;
+  adminAnalysisChart = new Chart(canvas, {
+    type: chartType,
+    data:{
+      labels:rows.map(x=>x.label),
+      datasets:[{label:metric,data:rows.map(x=>x.value),tension:.35,borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:chartType!=="doughnut"},title:{display:true,text:currentAnalysisTitle}},scales:chartType==="doughnut"?{}:{y:{beginAtZero:true}}}
+  });
+  const total = rows.reduce((a,b)=>a+b.value,0);
+  const avg = total/rows.length;
+  const summary = document.getElementById("analysisSummary");
+  if(summary) summary.textContent = `${rows.length} reports • Total: ${total} • Average: ${avg.toFixed(2)} • Metric: ${metric}`;
+}
+
+function saveAnalysisHistory(){
+  if(!currentAnalysisData){ showToast("Banza ukore analysis.","error"); return; }
+  const history = JSON.parse(localStorage.getItem("nasho_analysis_history") || "[]");
+  history.unshift({
+    id:"AN-"+Date.now(),
+    title:currentAnalysisData.title,
+    service:currentAnalysisData.serviceFilter,
+    metric:currentAnalysisData.metric,
+    chartType:currentAnalysisData.chartType,
+    createdAt:currentAnalysisData.createdAt,
+    rows:currentAnalysisData.rows.map(x=>({label:x.label,value:x.value}))
+  });
+  localStorage.setItem("nasho_analysis_history",JSON.stringify(history.slice(0,50)));
+  renderAnalysisHistory();
+  showToast("Analysis yabitswe muri Analysis History.","success");
+}
+
+function renderAnalysisHistory(){
+  const box=document.getElementById("analysisHistoryList"); if(!box) return;
+  const history=JSON.parse(localStorage.getItem("nasho_analysis_history") || "[]");
+  if(!history.length){box.innerHTML='<div class="table-empty-state"><i data-lucide="history"></i><p>Nta analysis yabitswe.</p></div>'; if(window.lucide)lucide.createIcons(); return;}
+  box.innerHTML=history.map(item=>`<div class="analysis-history-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.service)} • ${escapeHtml(item.metric)} • ${escapeHtml(item.chartType)}<br>${formatSubmittedAt(item.createdAt)}</p><div class="analysis-history-actions"><button class="btn-secondary btn-sm" onclick="loadAnalysisHistory('${escapeHtml(item.id)}')">Open</button><button class="btn-primary-outline btn-sm" onclick="shareAnalysisHistory('${escapeHtml(item.id)}')">Share</button></div></div>`).join("");
+  if(window.lucide) lucide.createIcons();
+}
+
+function loadAnalysisHistory(id){
+  const item=JSON.parse(localStorage.getItem("nasho_analysis_history") || "[]").find(x=>x.id===id); if(!item)return;
+  document.getElementById("analysisService").value=item.service;
+  populateAnalysisMetrics();
+  document.getElementById("analysisMetric").value=item.metric;
+  document.getElementById("analysisChartType").value=item.chartType;
+  document.getElementById("analysisTitle").value=item.title;
+  currentAnalysisData=item;
+  runAnalysis();
+}
+
+async function shareCurrentAnalysis(){
+  if(!currentAnalysisData){ showToast("Banza ukore analysis.","error"); return; }
+  const emails=[...new Set(reports.map(r=>r.reporterEmail).filter(isValidEmail))];
+  if(!emails.length){showToast("Nta reporter email iboneka.","error");return;}
+  try{ await postAdminAction("share_analysis",{analysis:currentAnalysisData,recipients:emails}); showToast(`Analysis yasabwe koherezwa kuri ${emails.length} reporter(s).`,"success"); }
+  catch(e){console.error(e);showToast("Habaye ikibazo mu gusangira analysis.","error");}
+}
+
+async function shareAnalysisHistory(id){
+  const item=JSON.parse(localStorage.getItem("nasho_analysis_history") || "[]").find(x=>x.id===id); if(!item)return;
+  const emails=[...new Set(reports.map(r=>r.reporterEmail).filter(isValidEmail))];
+  if(!emails.length){showToast("Nta reporter email iboneka.","error");return;}
+  try{ await postAdminAction("share_analysis",{analysis:item,recipients:emails}); showToast("Analysis yasabwe koherezwa kuri reporter emails.","success"); }
+  catch(e){console.error(e);showToast("Habaye ikibazo mu kohereza analysis.","error");}
+}
+
+async function sendAnnouncement(){
+  const title=document.getElementById("announcementTitle")?.value.trim() || "";
+  const message=document.getElementById("announcementMessage")?.value.trim() || "";
+  const audience=document.getElementById("announcementAudience")?.value || "all";
+  const selected=document.getElementById("announcementEmail")?.value.trim().toLowerCase() || "";
+  if(!title || !message){showToast("Andika umutwe n'ubutumwa bw'itangazo.","error");return;}
+  let recipients=[];
+  if(audience === "selected"){
+    if(!isValidEmail(selected)){showToast("Andika email yemewe.","error");return;}
+    recipients=[selected];
+  }else{
+    recipients=[...new Set(reports.map(r=>r.reporterEmail).filter(isValidEmail))];
+  }
+  if(!recipients.length){showToast("Nta email yabantu batanze reports iboneka.","error");return;}
+  const announcement={title,message,audience,recipients,createdAt:new Date().toISOString(),createdBy:DASHBOARD_USERNAME};
+  const list=JSON.parse(localStorage.getItem("nasho_announcements") || "[]"); list.unshift(announcement); localStorage.setItem("nasho_announcements",JSON.stringify(list.slice(0,50))); renderAnnouncements();
+  try{await postAdminAction("announcement",announcement);showToast(`Itangazo ryasabwe koherezwa kuri ${recipients.length} email(s).`,"success");}
+  catch(e){console.error(e);showToast("Itangazo ryabitswe ariko kohereza email byanze.","error");}
+}
+
+function renderAnnouncements(){
+  const box=document.getElementById("announcementList"); if(!box)return;
+  const list=JSON.parse(localStorage.getItem("nasho_announcements") || "[]");
+  box.innerHTML=list.length?list.map(a=>`<div class="announcement-item"><strong>${escapeHtml(a.title)}</strong><p>${escapeHtml(a.message)}</p><span class="text-muted">${formatSubmittedAt(a.createdAt)} • ${a.recipients?.length||0} email(s)</span></div>`).join(""):'<div class="table-empty-state"><i data-lucide="megaphone"></i><p>Nta tangazo rikorwa.</p></div>';
+  if(window.lucide)lucide.createIcons();
+}
+
+async function postAdminAction(action,payload){
+  if(!API_URL) throw new Error("API URL missing");
+  const body=JSON.stringify({action, ...payload});
+  return fetch(API_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body});
+}
+
+function initAdminTools(){
+  populateAdminReportSelect();
+  populateAnalysisServices();
+  renderAnalysisHistory();
+  renderAnnouncements();
+}
+
+
+/* =====================================================
    DRAFT
 ===================================================== */
 
@@ -7140,6 +7512,7 @@ function updateDashboard(){
   renderServiceChart();
 
   renderDashboardFeed();
+  initAdminTools();
 
 }
 
@@ -8435,6 +8808,12 @@ async function confirmSubmitReport(){
 
   if(API_URL){
     synced = await submitToGoogleSheet(report);
+    // Notify the configured admin recipients after a successful submission.
+    try{
+      await postAdminAction("notify_submission", { report });
+    }catch(notificationError){
+      console.warn("Submission notification request failed", notificationError);
+    }
   }
 
   showToast(
@@ -8577,6 +8956,91 @@ function updateLanguageChoices(){
 
 }
 
+
+
+
+/* =====================================================
+   LANGUAGE SYSTEM - KINYARWANDA / ENGLISH
+===================================================== */
+
+const NASHO_LANG = {
+  rw: {
+    formTab: "Tanga Raporo Nshya", dashboardTab: "Dashboard", historyTab: "Amateka", myHistoryTab: "Raporo Zanjye",
+    formTitle: "Kuzuza Raporo y'Umunsi", formDesc: "Uzuza amakuru yawe n'ibikorwa bya service wakozemo uyu munsi.",
+    staffTitle: "1. Amakuru y'Umukozi", staffHint: "Aya makuru azabikwa hamwe na report yawe.",
+    name: "Izina ry'Umukozi *", email: "Email *", phone: "Numero ya Telefone *", date: "Itariki *", shift: "Shift", service: "Service wakozemo *",
+    servicePlaceholder: "Hitamo service hepfo", shiftDay: "Umunsi", shiftNight: "Ijoro", shiftOther: "Ibindi",
+    serviceSelectTitle: "2. Hitamo Service", serviceSelectHint: "Hitamo service wakozemo uyu munsi.",
+    serviceInfo: "Uzuza amakuru ya service.", submit: "Tanga Raporo", reviewSubmit: "Emeza & Ohereza Raporo", back: "Subira Guhindura",
+    languageTitle: "Guhindura Ururimi", languageDesc: "Hitamo ururimi ushaka gukoresha muri system.", done: "Bikorewe", rwSmall: "Ururimi rw'u Rwanda", enSmall: "English language",
+    loginTitle: "Dashboard Login", username: "Username", password: "Password", login: "Injira", logout: "Sohoka",
+    languageSettings: "Guhindura Ururimi", dashboardRefresh: "Vugurura Dashboard", history: "Amateka", myReports: "Raporo Zanjye"
+  },
+  en: {
+    formTab: "New Report", dashboardTab: "Dashboard", historyTab: "History", myHistoryTab: "My Reports",
+    formTitle: "Complete Daily Report", formDesc: "Enter your information and the service activities completed today.",
+    staffTitle: "1. Staff Information", staffHint: "This information will be saved with your report.",
+    name: "Staff Name *", email: "Email *", phone: "Phone Number *", date: "Date *", shift: "Shift", service: "Service Worked In *",
+    servicePlaceholder: "Select a service below", shiftDay: "Day", shiftNight: "Night", shiftOther: "Other",
+    serviceSelectTitle: "2. Select Service", serviceSelectHint: "Select the service you worked in today.",
+    serviceInfo: "Complete the service information.", submit: "Submit Report", reviewSubmit: "Confirm & Submit Report", back: "Back to Change",
+    languageTitle: "Change Language", languageDesc: "Choose the language you want to use in the system.", done: "Done", rwSmall: "Rwanda language", enSmall: "English language",
+    loginTitle: "Dashboard Login", username: "Username", password: "Password", login: "Login", logout: "Logout",
+    languageSettings: "Change Language", dashboardRefresh: "Refresh Dashboard", history: "History", myReports: "My Reports"
+  }
+};
+
+function setLanguage(lang){
+  lang = lang === 'en' ? 'en' : 'rw';
+  localStorage.setItem('nasho_language', lang);
+  const t = NASHO_LANG[lang];
+
+  const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
+  const setAttr = (id, attr, value) => { const el=document.getElementById(id); if(el) el.setAttribute(attr,value); };
+
+  const tabForm=document.querySelector('#tabBtnForm span'); if(tabForm) tabForm.textContent=t.formTab;
+  const tabDash=document.querySelector('#tabBtnDashboard span'); if(tabDash) tabDash.textContent=t.dashboardTab;
+  const tabHist=document.querySelector('#tabBtnHistory span'); if(tabHist) tabHist.textContent=t.historyTab;
+  const tabMine=document.querySelector('#tabBtnMyHistory span'); if(tabMine) tabMine.textContent=t.myHistoryTab;
+
+  const paneTitles=document.querySelectorAll('#sectionForm .pane-title'); if(paneTitles[0]) paneTitles[0].textContent=t.formTitle;
+  const paneDescs=document.querySelectorAll('#sectionForm .pane-desc'); if(paneDescs[0]) paneDescs[0].textContent=t.formDesc;
+
+  const cards=document.querySelectorAll('#sectionForm .card-header-line');
+  if(cards[0]) { const h=cards[0].querySelector('h3'); const p=cards[0].querySelector('.section-hint'); if(h)h.textContent=t.staffTitle; if(p)p.textContent=t.staffHint; }
+  if(cards[1]) { const h=cards[1].querySelector('h3'); const p=cards[1].querySelector('.section-hint'); if(h)h.textContent=t.serviceSelectTitle; if(p)p.textContent=t.serviceSelectHint; }
+
+  const labels=document.querySelectorAll('#dailyReportForm label');
+  labels.forEach(label=>{
+    const text=label.textContent.trim();
+    const map={"Izina ry'Umukozi *":t.name,"Email *":t.email,"Numero ya Telefone *":t.phone,"Itariki *":t.date,"Shift":t.shift,"Service wakozemo *":t.service};
+    if(map[text]) label.textContent=map[text];
+  });
+
+  setAttr('selectedServiceInput','placeholder',t.servicePlaceholder);
+  const shift=document.getElementById('reportShift');
+  if(shift){
+    const opts=shift.options; if(opts[0])opts[0].text=t.shiftDay; if(opts[1])opts[1].text=t.shiftNight; if(opts[2])opts[2].text=t.shiftOther;
+  }
+  set('selectedServiceDescription',t.serviceInfo);
+  set('btnSubmitReport',t.submit);
+  set('modalLanguageTitle',t.languageTitle);
+  set('modalLanguageDesc',t.languageDesc);
+  set('settingsRwSmall',t.rwSmall); set('settingsEnSmall',t.enSmall); set('btnLanguageDone',t.done);
+  setAttr('dashboardUsername','placeholder',lang==='en'?'Enter username':'Andika username');
+  setAttr('dashboardPassword','placeholder',lang==='en'?'Enter password':'Andika password');
+  set('dashboardLoginTitle',t.loginTitle); set('dashboardLoginButton',t.login); set('dashboardLogoutText',t.logout);
+  set('btnBackToChange',t.back); set('btnConfirmSubmitReport',t.reviewSubmit);
+
+  const rw=document.getElementById('btnLangRw'), en=document.getElementById('btnLangEn');
+  if(rw)rw.classList.toggle('active',lang==='rw'); if(en)en.classList.toggle('active',lang==='en');
+  updateLanguageChoices();
+  if(window.lucide) lucide.createIcons();
+}
+
+function initializeLanguage(){
+  setLanguage(localStorage.getItem('nasho_language') || 'rw');
+}
 
 
 /* =====================================================
@@ -9217,6 +9681,10 @@ function showHistoryMessage(
 
 }
 
+
+
+// Initialize saved language on page load
+document.addEventListener('DOMContentLoaded', initializeLanguage);
 </script>
 
 </body>
