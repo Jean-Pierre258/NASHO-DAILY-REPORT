@@ -4049,6 +4049,95 @@
 
       </div>
 
+      <!-- =====================================================
+           ADMIN REPORT MANAGEMENT
+      ====================================================== -->
+      <div class="admin-tools-grid">
+
+        <div class="admin-panel admin-panel-wide" id="adminReportManagement">
+          <div class="admin-panel-header">
+            <div class="admin-panel-title">
+              <span class="admin-icon"><i data-lucide="files"></i></span>
+              <span>Admin Report Management</span>
+            </div>
+            <span class="text-muted">Shakisha kandi ucunge reports zose</span>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="form-group">
+              <label for="adminReportSearch">Shakisha Report</label>
+              <div class="input-with-icon">
+                <i data-lucide="search"></i>
+                <input
+                  id="adminReportSearch"
+                  type="text"
+                  placeholder="Name, Email, Service cyangwa Report ID"
+                  oninput="filterAdminReports()"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="adminReportServiceFilter">Service</label>
+              <select id="adminReportServiceFilter" onchange="filterAdminReports()">
+                <option value="ALL">Services zose</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="adminReportDateFrom">Kuva</label>
+              <input id="adminReportDateFrom" type="date" onchange="filterAdminReports()">
+            </div>
+
+            <div class="form-group">
+              <label for="adminReportDateTo">Kugeza</label>
+              <input id="adminReportDateTo" type="date" onchange="filterAdminReports()">
+            </div>
+          </div>
+
+          <div class="admin-action-row">
+            <button class="btn-secondary" onclick="resetAdminReportFilters()">
+              <i data-lucide="rotate-ccw"></i>
+              Siba Filters
+            </button>
+
+            <span class="admin-help" id="adminReportResultCount">0 reports</span>
+          </div>
+
+          <div class="table-card" style="margin-top:15px;overflow:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Reporter</th>
+                  <th>Email</th>
+                  <th>Service</th>
+                  <th>Report ID</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminReportsManagementBody"></tbody>
+            </table>
+
+            <div id="adminReportsManagementEmpty" class="table-empty-state hidden">
+              <i data-lucide="file-search"></i>
+              <p>Nta report ihuye na filters wahisemo.</p>
+            </div>
+          </div>
+
+          <div class="admin-panel-header" style="margin-top:22px">
+            <div class="admin-panel-title">
+              <span class="admin-icon"><i data-lucide="trash-2"></i></span>
+              <span>Recycle Bin</span>
+            </div>
+            <span class="text-muted" id="adminRecycleBinCount">0</span>
+          </div>
+
+          <div id="recycleBinList"></div>
+        </div>
+
+      </div>
+
     </section>
 
 
@@ -6704,7 +6793,424 @@ function initAdminTools(){
   populateAnalysisServices();
   renderAnalysisHistory();
   renderAnnouncements();
+
+  loadRecycledReports();
+  populateAdminReportServiceFilter();
+  filterAdminReports();
+  renderRecycleBin();
 }
+
+
+/* =====================================================
+   ADMIN REPORT MANAGEMENT / SEARCH / FILTER
+===================================================== */
+
+let recycledReports = [];
+
+function loadRecycledReports(){
+  try{
+    recycledReports =
+      JSON.parse(
+        localStorage.getItem("nasho_recycle_bin") || "[]"
+      );
+  }catch(error){
+    recycledReports = [];
+  }
+
+  updateRecycleBinCount();
+}
+
+function updateRecycleBinCount(){
+  const el = document.getElementById("adminRecycleBinCount");
+  if(el) el.textContent = `${recycledReports.length} report(s)`;
+}
+
+function populateAdminReportServiceFilter(){
+  const select =
+    document.getElementById("adminReportServiceFilter");
+
+  if(!select) return;
+
+  const previous = select.value || "ALL";
+
+  const services = [...new Set(
+    reports
+      .map(r => String(r.service || "").trim())
+      .filter(Boolean)
+  )].sort((a,b)=>a.localeCompare(b));
+
+  select.innerHTML =
+    '<option value="ALL">Services zose</option>' +
+    services.map(service =>
+      `<option value="${escapeHtml(service)}">${escapeHtml(service)}</option>`
+    ).join("");
+
+  if(
+    services.includes(previous) ||
+    previous === "ALL"
+  ){
+    select.value = previous;
+  }else{
+    select.value = "ALL";
+  }
+}
+
+function getFilteredAdminReports(){
+  const search =
+    (document.getElementById("adminReportSearch")?.value || "")
+      .trim()
+      .toLowerCase();
+
+  const service =
+    document.getElementById("adminReportServiceFilter")?.value || "ALL";
+
+  const dateFrom =
+    document.getElementById("adminReportDateFrom")?.value || "";
+
+  const dateTo =
+    document.getElementById("adminReportDateTo")?.value || "";
+
+  return [...reports]
+    .filter(report => {
+
+      const haystack = [
+        report.id,
+        report.reporterName,
+        report.reporterEmail,
+        report.service
+      ]
+      .map(value => String(value || "").toLowerCase())
+      .join(" ");
+
+      const matchesSearch =
+        !search || haystack.includes(search);
+
+      const matchesService =
+        service === "ALL" ||
+        String(report.service || "") === service;
+
+      const reportDate =
+        String(report.date || "").substring(0,10);
+
+      const matchesFrom =
+        !dateFrom || reportDate >= dateFrom;
+
+      const matchesTo =
+        !dateTo || reportDate <= dateTo;
+
+      return (
+        matchesSearch &&
+        matchesService &&
+        matchesFrom &&
+        matchesTo
+      );
+    })
+    .sort(
+      (a,b)=>
+        new Date(b.submittedAt || b.date || 0) -
+        new Date(a.submittedAt || a.date || 0)
+    );
+}
+
+function filterAdminReports(){
+  const body =
+    document.getElementById("adminReportsManagementBody");
+
+  const empty =
+    document.getElementById("adminReportsManagementEmpty");
+
+  const count =
+    document.getElementById("adminReportResultCount");
+
+  if(!body) return;
+
+  const filtered = getFilteredAdminReports();
+
+  body.innerHTML = filtered.map(report => `
+    <tr>
+      <td>${escapeHtml(formatDate(report.date))}</td>
+
+      <td>
+        <strong>${escapeHtml(report.reporterName || "N/A")}</strong>
+      </td>
+
+      <td>${escapeHtml(report.reporterEmail || "N/A")}</td>
+
+      <td>
+        <span class="status-tag">
+          ${escapeHtml(report.service || "Other")}
+        </span>
+      </td>
+
+      <td>
+        <span class="text-muted">
+          ${escapeHtml(report.id || "")}
+        </span>
+      </td>
+
+      <td>
+        <div class="admin-report-actions">
+          <button
+            class="btn-primary-outline btn-sm"
+            onclick='viewAdminManagedReport(${JSON.stringify(String(report.id))})'
+          >
+            <i data-lucide="eye"></i>
+            Reba
+          </button>
+
+          <button
+            class="btn-warning-outline btn-sm"
+            onclick='moveReportToRecycleBin(${JSON.stringify(String(report.id))})'
+          >
+            <i data-lucide="trash-2"></i>
+            Siba
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  if(count){
+    count.textContent =
+      `${filtered.length} report(s) muri ${reports.length} zose`;
+  }
+
+  if(empty){
+    empty.classList.toggle("hidden", filtered.length !== 0);
+  }
+
+  if(window.lucide){
+    lucide.createIcons();
+  }
+}
+
+function viewAdminManagedReport(id){
+  const report = getReportById(id);
+
+  if(report){
+    openReportViewModal(report);
+  }else{
+    showToast("Iyo report ntibonetse.", "error");
+  }
+}
+
+function resetAdminReportFilters(){
+  const search = document.getElementById("adminReportSearch");
+  const service = document.getElementById("adminReportServiceFilter");
+  const from = document.getElementById("adminReportDateFrom");
+  const to = document.getElementById("adminReportDateTo");
+
+  if(search) search.value = "";
+  if(service) service.value = "ALL";
+  if(from) from.value = "";
+  if(to) to.value = "";
+
+  filterAdminReports();
+
+  showToast("Filters zasibwe.", "success");
+}
+
+function moveReportToRecycleBin(id){
+  const index =
+    reports.findIndex(
+      r => String(r.id) === String(id)
+    );
+
+  if(index < 0){
+    showToast("Report ntibonetse.", "error");
+    return;
+  }
+
+  const report = reports[index];
+
+  if(
+    !confirm(
+      `Urashaka gushyira report ${report.id} muri Recycle Bin?`
+    )
+  ){
+    return;
+  }
+
+  reports.splice(index,1);
+
+  recycledReports.unshift({
+    ...report,
+    deletedAt:new Date().toISOString()
+  });
+
+  localStorage.setItem(
+    "nasho_reports",
+    JSON.stringify(reports)
+  );
+
+  localStorage.setItem(
+    "nasho_recycle_bin",
+    JSON.stringify(recycledReports)
+  );
+
+  document.getElementById("reportsCountBadge").textContent =
+    reports.length;
+
+  populateAdminReportSelect();
+  populateAdminReportServiceFilter();
+  filterAdminReports();
+  renderHistoryTable(reports);
+  updateRecycleBinCount();
+  renderRecycleBin();
+  updateDashboard();
+
+  showToast("Report yashyizwe muri Recycle Bin.", "success");
+}
+
+function renderRecycleBin(){
+  const box =
+    document.getElementById("recycleBinList");
+
+  if(!box) return;
+
+  updateRecycleBinCount();
+
+  if(!recycledReports.length){
+    box.innerHTML = `
+      <div class="table-empty-state">
+        <i data-lucide="trash-2"></i>
+        <p>Recycle Bin irimo ubusa.</p>
+      </div>
+    `;
+
+    if(window.lucide) lucide.createIcons();
+    return;
+  }
+
+  box.innerHTML = recycledReports.map(report => `
+    <div class="admin-report-card">
+      <strong>
+        ${escapeHtml(report.reporterName || "N/A")}
+      </strong>
+
+      <div class="admin-report-meta">
+        ${escapeHtml(report.service || "Other")}
+        • ${escapeHtml(report.date || "")}
+        • ${escapeHtml(report.id || "")}
+      </div>
+
+      <div class="admin-report-actions">
+        <button
+          class="btn-primary-outline btn-sm"
+          onclick='viewRecycledReport(${JSON.stringify(String(report.id))})'
+        >
+          <i data-lucide="eye"></i>
+          Reba
+        </button>
+
+        <button
+          class="btn-primary btn-sm"
+          onclick='restoreReportFromRecycleBin(${JSON.stringify(String(report.id))})'
+        >
+          <i data-lucide="rotate-ccw"></i>
+          Restore
+        </button>
+
+        <button
+          class="btn-warning-outline btn-sm"
+          onclick='permanentlyDeleteReport(${JSON.stringify(String(report.id))})'
+        >
+          <i data-lucide="trash-2"></i>
+          Delete burundu
+        </button>
+      </div>
+    </div>
+  `).join("");
+
+  if(window.lucide) lucide.createIcons();
+}
+
+function viewRecycledReport(id){
+  const report =
+    recycledReports.find(
+      r => String(r.id) === String(id)
+    );
+
+  if(report){
+    openReportViewModal(report);
+  }else{
+    showToast("Report ntibonetse muri Recycle Bin.", "error");
+  }
+}
+
+function restoreReportFromRecycleBin(id){
+  const index =
+    recycledReports.findIndex(
+      r => String(r.id) === String(id)
+    );
+
+  if(index < 0){
+    showToast("Report ntibonetse muri Recycle Bin.", "error");
+    return;
+  }
+
+  const report = {
+    ...recycledReports[index]
+  };
+
+  delete report.deletedAt;
+
+  reports.unshift(report);
+  recycledReports.splice(index,1);
+
+  localStorage.setItem(
+    "nasho_reports",
+    JSON.stringify(reports)
+  );
+
+  localStorage.setItem(
+    "nasho_recycle_bin",
+    JSON.stringify(recycledReports)
+  );
+
+  populateAdminReportSelect();
+  populateAdminReportServiceFilter();
+  filterAdminReports();
+  renderHistoryTable(reports);
+  renderRecycleBin();
+  updateDashboard();
+
+  showToast("Report yagaruwe neza.", "success");
+}
+
+function permanentlyDeleteReport(id){
+  const index =
+    recycledReports.findIndex(
+      r => String(r.id) === String(id)
+    );
+
+  if(index < 0){
+    showToast("Report ntibonetse muri Recycle Bin.", "error");
+    return;
+  }
+
+  if(
+    !confirm(
+      "Urashaka gusiba burundu iyi report? Iki gikorwa ntigishobora gusubirwaho."
+    )
+  ){
+    return;
+  }
+
+  recycledReports.splice(index,1);
+
+  localStorage.setItem(
+    "nasho_recycle_bin",
+    JSON.stringify(recycledReports)
+  );
+
+  updateRecycleBinCount();
+  renderRecycleBin();
+
+  showToast("Report yasibwe burundu.", "success");
+}
+
+
 
 
 /* =====================================================
@@ -7513,6 +8019,9 @@ function updateDashboard(){
 
   renderDashboardFeed();
   initAdminTools();
+  populateAdminReportServiceFilter();
+  filterAdminReports();
+  renderRecycleBin();
 
 }
 
