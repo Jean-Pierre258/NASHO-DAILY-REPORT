@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="rw">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Sisitemu yo Gutangiraho no Gukurikirana Raporo za Buri Munsi (Nasho Daily Reporting System) ihuza na Google Sheet">
+  <title>Nasho Daily Report - Sisitemu ya Raporo za Buri Munsi</title>
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav" id="mainHeader">
+      <div class="brand-section">
+        <div class="logo-badge">
+          <i data-lucide="sprout" class="logo-icon"></i>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-wrap">
+            <h1 class="brand-title" data-i18n="app_title">NASHO DAILY REPORT</h1>
+            <span class="version-tag">v2.0 • Pro</span>
+          </div>
+          <p class="brand-subtitle" data-i18n="app_subtitle">Sisitemu yo Gutanga no Gukurikirana Raporo z'Akazi za Buri
+            Munsi</p>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Google Sheet Sync Status Indicator -->
+        <div class="sheet-status-pill" id="sheetStatusBadge" onclick="openGoogleSheetModal()"
+          title="Kanda hano uhuze na Google Sheet">
+          <span class="status-dot disconnected" id="sheetStatusDot"></span>
+          <i data-lucide="sheet" class="pill-icon"></i>
+          <span class="sheet-status-text" id="sheetStatusText" data-i18n="sheet_not_connected">Google Sheet:
+            Ntidahuje</span>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="lang-switch-group">
+          <button class="lang-btn active" id="btnLangRw" onclick="setLanguage('rw')">Kinyarwanda</button>
+          <button class="lang-btn" id="btnLangEn" onclick="setLanguage('en')">English</button>
+        </div>
+
+        <!-- Settings Button -->
+        <button class="icon-action-btn" onclick="openGoogleSheetModal()" title="Igenamiterere rya Google Sheet">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="main-tabs">
+      <button class="tab-btn active" id="tabBtnForm" onclick="switchTab('form')">
+        <i data-lucide="file-plus-2"></i>
+        <span data-i18n="tab_new_report">Tanga Raporo Nshya</span>
+      </button>
+      <button class="tab-btn" id="tabBtnDashboard" onclick="switchTab('dashboard')">
+        <i data-lucide="layout-dashboard"></i>
+        <span data-i18n="tab_dashboard">Imbonerahamwe n'Ubushakashatsi</span>
+      </button>
+      <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">
+        <i data-lucide="history"></i>
+        <span data-i18n="tab_history">Amateka ya Raporo</span>
+        <span class="counter-badge" id="reportsCountBadge">0</span>
+      </button>
+      <button class="tab-btn" id="tabBtnSync" onclick="openGoogleSheetModal()">
+        <i data-lucide="file-spreadsheet"></i>
+        <span data-i18n="tab_google_sheet">Guhuza na Google Sheet</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-wrapper">
+
+      <!-- ================= SECTION 1: FORM YO GUTANGA RAPORO ================= -->
+      <section id="sectionForm" class="tab-pane active">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title" data-i18n="form_title">Kuzuza Raporo y'Umunsi</h2>
+            <p class="pane-desc" data-i18n="form_subtitle">Uzuza neza imyirondoro, ibikorwa byakozwe, ibipimo,
+              n'imbogamizi zagaragaye.</p>
+          </div>
+          <div class="header-tools">
+            <button type="button" class="btn-secondary" onclick="loadDraft()">
+              <i data-lucide="refresh-cw"></i>
+              <span data-i18n="load_draft">Kugarura Ibyari Byuzuye</span>
+            </button>
+            <button type="button" class="btn-secondary" onclick="resetForm()">
+              <i data-lucide="trash-2"></i>
+              <span data-i18n="clear_form">Guhanagura Byose</span>
+            </button>
+          </div>
+        </div>
+
+        <form id="dailyReportForm" onsubmit="handleFormSubmit(event)">
+          <!-- Card 1: Amakuru y'Ibanze (Basic Metadata) -->
+          <div class="form-card">
+            <div class="card-header-line">
+              <div class="card-icon-wrap"><i data-lucide="calendar"></i></div>
+              <h3 data-i18n="card_general_info">1. Amakuru y'Ibanze & Umwirondoro</h3>
+            </div>
+
+            <div class="form-grid grid-3">
+              <div class="form-group">
+                <label for="reportDate" data-i18n="lbl_date">Itariki y'Akazi *</label>
+                <input type="date" id="reportDate" name="reportDate" required>
+              </div>
+
+              <div class="form-group">
+                <label for="reportShift" data-i18n="lbl_shift">Igihe cy'Akazi (Shift) *</label>
+                <select id="reportShift" name="reportShift" required>
+                  <option value="Umunsi (Day Shift)">Umunsi (Day Shift - 07:00 - 17:00)</option>
+                  <option value="Ijoro (Night Shift)">Ijoro (Night Shift - 18:00 - 06:00)</option>
+                  <option value="Amasaha y'Ikirenga (Overtime)">Amasaha y'Ikirenga (Overtime)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="department" data-i18n="lbl_department">Ishami / Department *</label>
+                <select id="department" name="department" required>
+                  <option value="">-- Hitamo Ishami --</option>
+                  <option value="Ubuhinzi (Agronomy & Farming)">Ubuhinzi (Agronomy & Farming)</option>
+                  <option value="Ubwuhira (Irrigation & Water)">Ubwuhira (Irrigation & Water)</option>
+                  <option value="Amashanyarazi n'Izuba (Solar & Electrical)">Amashanyarazi n'Izuba (Solar & Electrical)
+                  </option>
+                  <option value="Imashini na Tekiniki (Machinery & Workshop)">Imashini na Tekiniki (Machinery &
+                    Workshop)</option>
+                  <option value="Ububiko n'Ibikoresho (Store & Logistics)">Ububiko n'Ibikoresho (Store & Logistics)
+                  </option>
+                  <option value="Umutekano (Security & Safety)">Umutekano (Security & Safety)</option>
+                  <option value="Ubutegetsi n'Imbaga (Administration & HR)">Ubutegetsi n'Imbaga (Administration & HR)
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reporterName" data-i18n="lbl_reporter_name">Izina ry'Utanga Raporo (Supervisor / Lead)
+                  *</label>
+                <input type="text" id="reporterName" name="reporterName" placeholder="Urugero: Mugisha Jean Paul"
+                  required>
+              </div>
+
+              <div class="form-group">
+                <label for="reporterPhone" data-i18n="lbl_reporter_phone">Nimero ya Telefone</label>
+                <input type="tel" id="reporterPhone" name="reporterPhone" placeholder="Urugero: 0788 123 456">
+              </div>
+
+              <div class="form-group">
+                <label for="siteZone" data-i18n="lbl_site_zone">Aho Akazi Kakorewe (Zone / Pivot / Sector) *</label>
+                <input type="text" id="siteZone" name="siteZone"
+                  placeholder="Urugero: Pivot 12, Pumping Station 2, Site B" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Ibipimo by'Umunsi (Key Quantitative Metrics) -->
+          <div class="form-card">
+            <div class="card-header-line">
+              <div class="card-icon-wrap"><i data-lucide="gauge"></i></div>
+              <h3 data-i18n="card_metrics">2. Ibipimo by'Umunsi (Quantitative Metrics)</h3>
+            </div>
+
+            <div class="form-grid grid-4">
+              <div class="form-group">
+                <label for="metricWorkers" data-i18n="lbl_workers">Umubare w'Abakozi Bakoranye</label>
+                <div class="input-with-icon">
+                  <i data-lucide="users"></i>
+                  <input type="number" id="metricWorkers" name="metricWorkers" min="0" placeholder="0" value="0">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="metricHours" data-i18n="lbl_hours">Amasaha Yakozwe (Hours)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="clock"></i>
+                  <input type="number" step="0.5" id="metricHours" name="metricHours" min="0" placeholder="8" value="8">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="metricFuel" data-i18n="lbl_fuel">Mazutu / Lisansi Yakoreshejwe (Liters)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="fuel"></i>
+                  <input type="number" step="0.1" id="metricFuel" name="metricFuel" min="0" placeholder="0" value="0">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="metricProduction" data-i18n="lbl_output">Umusaruro / Ingano y'Ibyakozwe (Hectares /
+                  Units)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="trending-up"></i>
+                  <input type="text" id="metricProduction" name="metricProduction"
+                    placeholder="Urugero: 15 Ha zishyizwemo amazi">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Ibikorwa Byakozwe (Tasks & Operations List) -->
+          <div class="form-card">
+            <div class="card-header-line between">
+              <div class="card-header-left">
+                <div class="card-icon-wrap"><i data-lucide="check-square"></i></div>
+                <div>
+                  <h3 data-i18n="card_tasks">3. Ibikorwa Byakozwe Uyu Munsi (Daily Activities)</h3>
+                  <p class="section-hint" data-i18n="tasks_hint">Ongeraho buri gikorwa cyakozwe, urwego kigezeho,
+                    n'ibisobanuro byacyo.</p>
+                </div>
+              </div>
+              <button type="button" class="btn-primary-outline" onclick="addTaskRow()">
+                <i data-lucide="plus-circle"></i>
+                <span data-i18n="btn_add_task">+ Ongeraho Igikorwa</span>
+              </button>
+            </div>
+
+            <div class="dynamic-list-container" id="tasksContainer">
+              <!-- Task rows will be injected here via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Card 4: Imbogamizi n'Ibibazo Byabonetse (Issues & Challenges) -->
+          <div class="form-card">
+            <div class="card-header-line between">
+              <div class="card-header-left">
+                <div class="card-icon-wrap alert"><i data-lucide="alert-triangle"></i></div>
+                <div>
+                  <h3 data-i18n="card_issues">4. Imbogamizi, Impanuka cyangwa Ibibazo Byagaragaye</h3>
+                  <p class="section-hint" data-i18n="issues_hint">Andika ibibazo byahagaritse akazi, imashini zapfuye
+                    cyangwa ibikeneye gukemurwa vuba.</p>
+                </div>
+              </div>
+              <button type="button" class="btn-warning-outline" onclick="addIssueRow()">
+                <i data-lucide="plus-circle"></i>
+                <span data-i18n="btn_add_issue">+ Ongeraho Ikibazo</span>
+              </button>
+            </div>
+
+            <div class="dynamic-list-container" id="issuesContainer">
+              <!-- Issue rows will be injected here via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Card 5: Ibiteganyijwe Ejo n'Ibindi Bisobanuro (Plan for Tomorrow & Notes) -->
+          <div class="form-card">
+            <div class="card-header-line">
+              <div class="card-icon-wrap"><i data-lucide="arrow-right-circle"></i></div>
+              <h3 data-i18n="card_tomorrow">5. Ibiteganyijwe Gukorwa Ejo & Ibisobanuro Byiyongereye</h3>
+            </div>
+
+            <div class="form-grid grid-2">
+              <div class="form-group">
+                <label for="tomorrowPlan" data-i18n="lbl_tomorrow_plan">Gahunda y'Ibikorwa by'Ejo (Tomorrow's Targets)
+                  *</label>
+                <textarea id="tomorrowPlan" name="tomorrowPlan" rows="4"
+                  placeholder="Urugero: 1. Gukomeza gusana umuyoboro wa Pivot 5&#10;2. Gutera ifumbire muri Block 4..."
+                  required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="generalRemarks" data-i18n="lbl_remarks">Icyitonderwa cyangwa Ibyifuzo ku Buyobozi (General
+                  Remarks)</label>
+                <textarea id="generalRemarks" name="generalRemarks" rows="4"
+                  placeholder="Andika hano niba hari ibikoresho bikenewe mu bubiko cyangwa amabwiriza asabwa..."></textarea>
+              </div>
+            </div>
+
+            <!-- Optional Image / Evidence Upload -->
+            <div class="form-group mt-3">
+              <label data-i18n="lbl_photo">Ifoto / Gihamya y'Ibikorwa (Photo Attachment - Optional)</label>
+              <div class="upload-box" id="uploadDropzone">
+                <input type="file" id="reportPhoto" accept="image/*" onchange="handleImageUpload(event)">
+                <div class="upload-content" id="uploadPlaceholder">
+                  <i data-lucide="camera" class="upload-icon"></i>
+                  <span data-i18n="upload_prompt">Kanda hano cyangwa uhashyire ifoto y'ibikorwa/ikibazo</span>
+                  <small class="text-muted">PNG, JPG cyangwa WEBP (Max 5MB)</small>
+                </div>
+                <div class="image-preview-wrapper hidden" id="imagePreviewContainer">
+                  <img id="imagePreview" src="" alt="Photo Preview">
+                  <button type="button" class="btn-remove-img" onclick="removeUploadedImage()" title="Kuraho iyi foto">
+                    <i data-lucide="x"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Section with Sync Controls -->
+          <div class="form-submit-panel">
+            <div class="submit-info">
+              <label class="checkbox-container">
+                <input type="checkbox" id="autoSyncToGoogleSheet" checked>
+                <span class="checkmark"></span>
+                <span class="checkbox-label" data-i18n="lbl_auto_sync_check">Kohereza ako kanya muri Google Sheet
+                  ibitswe</span>
+              </label>
+              <span class="save-status-indicator" id="autoSaveIndicator">
+                <i data-lucide="check"></i> Ibyanditswe byose bibikwa ako kanya
+              </span>
+            </div>
+
+            <div class="submit-actions">
+              <button type="button" class="btn-secondary" onclick="previewCurrentReport()">
+                <i data-lucide="eye"></i>
+                <span data-i18n="btn_preview">Reba Uko Iza Gusa</span>
+              </button>
+              <button type="submit" class="btn-primary" id="btnSubmitReport">
+                <i data-lucide="send"></i>
+                <span data-i18n="btn_submit">Tanga Raporo ubu</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- ================= SECTION 2: IMBONERAHAMWE N'UBUSHAKASHATSI (DASHBOARD) ================= -->
+      <section id="sectionDashboard" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title" data-i18n="dashboard_title">Imbonerahamwe y'Ibikorwa (Analytics & KPIs)</h2>
+            <p class="pane-desc" data-i18n="dashboard_subtitle">Incamake y'imikorere, ibipimo n'imbogamizi zatanzwe muri
+              Nasho.</p>
+          </div>
+          <div class="header-tools">
+            <button class="btn-secondary" onclick="exportDataToCsv()">
+              <i data-lucide="download"></i>
+              <span data-i18n="btn_export_csv">Kukuramo CSV / Excel</span>
+            </button>
+            <button class="btn-primary-outline" onclick="openGoogleSheetModal()">
+              <i data-lucide="external-link"></i>
+              <span data-i18n="btn_open_sheet">Reba muri Google Sheet</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon-wrap emerald"><i data-lucide="files"></i></div>
+            <div class="stat-content">
+              <span class="stat-title" data-i18n="stat_total_reports">Raporo Zose Zatanzwe</span>
+              <span class="stat-number" id="kpiTotalReports">0</span>
+              <span class="stat-trend positive" id="kpiTodayCount">0 z'uyu munsi</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap blue"><i data-lucide="users"></i></div>
+            <div class="stat-content">
+              <span class="stat-title" data-i18n="stat_total_workers">Abakozi Bakoze (Total)</span>
+              <span class="stat-number" id="kpiTotalWorkers">0</span>
+              <span class="stat-sub" id="kpiAvgHours">0h impuzandengo/umunsi</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap amber"><i data-lucide="alert-octagon"></i></div>
+            <div class="stat-content">
+              <span class="stat-title" data-i18n="stat_issues_recorded">Imbogamizi Zanditswe</span>
+              <span class="stat-number" id="kpiTotalIssues">0</span>
+              <span class="stat-sub alert-text" id="kpiCriticalIssues">0 zikomeye cyane</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-wrap purple"><i data-lucide="fuel"></i></div>
+            <div class="stat-content">
+              <span class="stat-title" data-i18n="stat_total_fuel">Mazutu Yakoreshejwe</span>
+              <span class="stat-number" id="kpiTotalFuel">0 L</span>
+              <span class="stat-sub">Muri raporo zose</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Two-Column Visuals -->
+        <div class="dash-columns">
+          <!-- Department Distribution Breakdown -->
+          <div class="content-card">
+            <div class="card-header-line">
+              <div class="card-icon-wrap"><i data-lucide="pie-chart"></i></div>
+              <h3 data-i18n="chart_dept_distribution">Raporo Zikurikije Amashami (Departments)</h3>
+            </div>
+            <div class="dept-list-progress" id="deptBreakdownList">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+
+          <!-- Recent Critical Issues Feed -->
+          <div class="content-card">
+            <div class="card-header-line">
+              <div class="card-icon-wrap alert"><i data-lucide="bell"></i></div>
+              <h3 data-i18n="issues_feed_title">Ibibazo Bikeneye Ibisubizo Vuba</h3>
+            </div>
+            <div class="issues-feed-list" id="dashboardIssuesFeed">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 3: AMATEKA YA RAPORO (REPORTS HISTORY & FILTER) ================= -->
+      <section id="sectionHistory" class="tab-pane">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title" data-i18n="history_title">Amateka n'Urutonde rwa Raporo Zose</h2>
+            <p class="pane-desc" data-i18n="history_subtitle">Shakisha, shungura, kora PDF, cyangwa usome raporo zose
+              zatanzwe.</p>
+          </div>
+          <div class="header-tools">
+            <button class="btn-secondary" onclick="exportDataToCsv()">
+              <i data-lucide="file-spreadsheet"></i>
+              <span data-i18n="btn_export_all">Gukuramo CSV / Excel</span>
+            </button>
+            <button class="btn-secondary" onclick="exportBackupJson()">
+              <i data-lucide="save"></i>
+              <span data-i18n="btn_backup">Kubika Backup (JSON)</span>
+            </button>
+            <label class="btn-secondary" style="margin-bottom:0; cursor:pointer;">
+              <i data-lucide="upload"></i>
+              <span data-i18n="btn_import">Kugarura Backup</span>
+              <input type="file" id="importJsonFile" accept=".json" onchange="importBackupJson(event)"
+                style="display:none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="filter-item">
+              <label for="filterSearch" data-i18n="filter_search">Shakisha (Izina, Aho cyakorewe, n'ibindi)</label>
+              <div class="input-with-icon">
+                <i data-lucide="search"></i>
+                <input type="text" id="filterSearch" placeholder="Shakisha..." oninput="applyFilters()">
+              </div>
+            </div>
+
+            <div class="filter-item">
+              <label for="filterDept" data-i18n="filter_dept">Ishami (Department)</label>
+              <select id="filterDept" onchange="applyFilters()">
+                <option value="ALL">Amashami Yose</option>
+                <option value="Ubuhinzi">Ubuhinzi (Agronomy)</option>
+                <option value="Ubwuhira">Ubwuhira (Irrigation)</option>
+                <option value="Amashanyarazi">Amashanyarazi (Solar/Electric)</option>
+                <option value="Imashini">Imashini na Tekiniki</option>
+                <option value="Ububiko">Ububiko (Store)</option>
+                <option value="Umutekano">Umutekano (Security)</option>
+                <option value="Ubutegetsi">Ubutegetsi (Admin)</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label for="filterDateFrom" data-i18n="filter_date_from">Kuva Itariki</label>
+              <input type="date" id="filterDateFrom" onchange="applyFilters()">
+            </div>
+
+            <div class="filter-item">
+              <label for="filterDateTo" data-i18n="filter_date_to">Kugeza Itariki</label>
+              <input type="date" id="filterDateTo" onchange="applyFilters()">
+            </div>
+
+            <div class="filter-item filter-actions">
+              <button class="btn-secondary" onclick="resetFilters()">
+                <i data-lucide="rotate-ccw"></i>
+                <span data-i18n="filter_reset">Gusubiraho</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table of Reports -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="reportsTable">
+              <thead>
+                <tr>
+                  <th data-i18n="th_date">Itariki</th>
+                  <th data-i18n="th_shift">Shift</th>
+                  <th data-i18n="th_reporter">Utanga Raporo</th>
+                  <th data-i18n="th_dept">Ishami</th>
+                  <th data-i18n="th_zone">Ahakorewe</th>
+                  <th data-i18n="th_tasks_count">Ibikorwa</th>
+                  <th data-i18n="th_issues_count">Ibibazo</th>
+                  <th data-i18n="th_status">Status</th>
+                  <th class="text-right" data-i18n="th_actions">Ibikorwa</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="table-empty-state hidden" id="tableEmptyState">
+            <i data-lucide="inbox" class="empty-icon"></i>
+            <h4 data-i18n="empty_table_title">Nta raporo ibonetse</h4>
+            <p data-i18n="empty_table_desc">Nta raporo ihwanye n'ibyo ushakishije cyangwa nta raporo iruzuzwa.</p>
+            <button class="btn-primary" onclick="switchTab('form')">
+              <i data-lucide="plus"></i>
+              <span data-i18n="btn_create_first">Tanga Raporo ya Mbere</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <p><strong>Nasho Daily Reporting System</strong> • Project Work Log & Monitoring</p>
+      </div>
+      <div class="footer-right">
+        <span class="sync-footer-link" onclick="openGoogleSheetModal()">
+          <i data-lucide="link-2"></i> Google Sheet Sync
+        </span>
+        <span>•</span>
+        <span>Rwanda 🇷🇼</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ================= MODAL 1: IGENAMITERERE RYA GOOGLE SHEET (GOOGLE SHEET INTEGRATION) ================= -->
+  <div class="modal-backdrop hidden" id="modalGoogleSheet">
+    <div class="modal-dialog modal-large">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge"><i data-lucide="file-spreadsheet"></i></div>
+          <div>
+            <h3 class="modal-title" data-i18n="modal_sheet_title">Guhuza Urubuga na Google Sheet yawe</h3>
+            <p class="modal-desc" data-i18n="modal_sheet_desc">Huza iyi fomu na Google Sheet yawe kugira ngo buri raporo
+              ijye yikora muri sheet ako kanya!</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeGoogleSheetModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Status Box -->
+        <div class="sheet-status-box" id="sheetModalStatusBox">
+          <div class="status-left">
+            <span class="status-indicator-circle" id="modalStatusCircle"></span>
+            <div>
+              <strong id="modalStatusTitle">Google Sheet ntiyari yahuzwa</strong>
+              <p class="text-sm" id="modalStatusDesc">Shyiramo Webhook URL ya Google Apps Script ikurikira.</p>
+            </div>
+          </div>
+          <button class="btn-secondary btn-sm" onclick="testGoogleSheetConnection()">
+            <i data-lucide="activity"></i> Kugerageza (Test)
+          </button>
+        </div>
+
+        <div class="form-group mt-3">
+          <label for="googleSheetWebhookUrl"><strong>Google Apps Script Webhook URL (POST):</strong></label>
+          <input type="url" id="googleSheetWebhookUrl" placeholder="https://script.google.com/macros/s/AKfycbx.../exec">
+          <small class="text-muted">Shyiramo URL y'ingenzi wavanye muri "Deploy as Web App" muri Google Sheet
+            yawe.</small>
+        </div>
+
+        <div class="form-group mt-3">
+          <label for="googleSheetDirectUrl"><strong>Link Isanzwe ya Google Sheet (View link):</strong></label>
+          <input type="url" id="googleSheetDirectUrl"
+            placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs.../edit">
+          <small class="text-muted">Iyi link izajya ifunguka iyo ukanze "Reba muri Google Sheet".</small>
+        </div>
+
+        <!-- Step-by-step Guide -->
+        <div class="guide-accordion">
+          <div class="guide-header" onclick="toggleGuide()">
+            <div class="guide-header-title">
+              <i data-lucide="help-circle"></i>
+              <strong data-i18n="how_to_setup">Amabwiriza y'uburyo bwo kubona iyi Link muri Google Sheet yawe (Mu
+                masegonda 30)</strong>
+            </div>
+            <i data-lucide="chevron-down" id="guideChevron"></i>
+          </div>
+          <div class="guide-content" id="guideContent">
+            <ol class="setup-steps">
+              <li>Fungura <strong>Google Sheet</strong> yawe usanzwe ukoresha muri browser.</li>
+              <li>Kanda ahanditse <strong>Extensions</strong> hejuru &gt; hitamo <strong>Apps Script</strong>.</li>
+              <li>Siba ibyanditsemo byose maze ushyiremo iyi code ikurikira (Kanda "Copy Code"):</li>
+            </ol>
+
+            <div class="code-box-wrapper">
+              <button class="btn-copy-code" onclick="copyAppsScriptCode()">
+                <i data-lucide="copy"></i> <span id="copyCodeText">Koporora Code (Copy)</span>
+              </button>
+              <pre><code id="appsScriptCodeSample">function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    // Niba ari ubwa mbere, shyiraho imitwe y'inkingi (Headers)
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "ID", "Itariki", "Igihe (Shift)", "Utanga Raporo", "Telefone",
+        "Ishami (Dept)", "Ahakorewe (Zone)", "Abakozi", "Amasaha",
+        "Mazutu (L)", "Umusaruro", "Ibikorwa Byakozwe", "Imbogamizi",
+        "Gahunda y'Ejo", "Icyitonderwa", "Yatanzwe Kuwa"
+      ]);
+    }
+
+    // Ongeraho amakuru ya raporo nshya
+    sheet.appendRow([
+      data.id,
+      data.date,
+      data.shift,
+      data.reporterName,
+      data.reporterPhone || "",
+      data.department,
+      data.siteZone,
+      data.metricWorkers,
+      data.metricHours,
+      data.metricFuel,
+      data.metricProduction || "",
+      data.tasksSummary,
+      data.issuesSummary,
+      data.tomorrowPlan,
+      data.generalRemarks || "",
+      data.submittedAt
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ "status": "success", "message": "Raporo yakiriwe neza muri Google Sheet!" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</code></pre>
+            </div>
+
+            <ol class="setup-steps" start="4">
+              <li>Kanda <strong>Deploy</strong> (iburyo hejuru mu ibara ry'ubururu) &gt; <strong>New
+                  deployment</strong>.</li>
+              <li>Kanda ku kazu k'uruziga (Gear icon) &gt; Hitamo <strong>Web app</strong>.</li>
+              <li>Ahanditse <strong>Execute as</strong>: hitamo <em>Me</em>.</li>
+              <li>Ahanditse <strong>Who has access</strong>: hitamo <em>Anyone</em> (bityo form ishobore koherezamo
+                amakuru).</li>
+              <li>Kanda <strong>Deploy</strong> &gt; Koporora <strong>Web app URL</strong> maze uyizane hano uyishyire
+                muri ako kazu hejuru!</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeGoogleSheetModal()">Funga</button>
+        <button class="btn-primary" onclick="saveGoogleSheetSettings()">
+          <i data-lucide="check"></i> Bika Igenamiterere
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: KUREBA RAPORO N'UBURYO BWO GUFYATURA/PDF (PRINT / DETAIL VIEW) ================= -->
+  <div class="modal-backdrop hidden" id="modalReportView">
+    <div class="modal-dialog modal-large">
+      <div class="modal-header no-print">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge emerald"><i data-lucide="file-text"></i></div>
+          <div>
+            <h3 class="modal-title" id="viewModalTitle">Raporo Irambuye y'Akazi</h3>
+            <p class="modal-desc" id="viewModalSubtitle">Inshamake na raporo yuzuye ya Nasho</p>
+          </div>
+        </div>
+        <div class="modal-header-actions">
+          <button class="btn-primary-outline btn-sm" onclick="printReportDocument()">
+            <i data-lucide="printer"></i> Capa cyangwa Kora PDF (Print)
+          </button>
+          <button class="modal-close" onclick="closeReportViewModal()"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body printable-document" id="printableReportContent">
+        <!-- Official Printable Document Structure -->
+        <div class="doc-header">
+          <div class="doc-header-brand">
+            <div class="doc-logo-circle"><i data-lucide="sprout"></i></div>
+            <div>
+              <h2 class="doc-title">NASHO PROJECT OPERATIONS</h2>
+              <p class="doc-sub">Sisitemu yo Gukurikirana Imirimo ya Buri Munsi (Daily Operations Report)</p>
+            </div>
+          </div>
+          <div class="doc-header-meta">
+            <span class="doc-id-pill" id="viewReportId">NSR-2026-0001</span>
+            <span class="doc-status-tag" id="viewReportSyncStatus">Google Sheet Synced</span>
+          </div>
+        </div>
+
+        <div class="doc-grid-meta">
+          <div class="meta-box">
+            <span class="meta-label">ITARIKI / DATE</span>
+            <strong class="meta-val" id="viewDate">2026-09-13</strong>
+          </div>
+          <div class="meta-box">
+            <span class="meta-label">IGIHE / SHIFT</span>
+            <strong class="meta-val" id="viewShift">Umunsi (Day Shift)</strong>
+          </div>
+          <div class="meta-box">
+            <span class="meta-label">ISHAMI / DEPARTMENT</span>
+            <strong class="meta-val" id="viewDepartment">Ubwuhira (Irrigation)</strong>
+          </div>
+          <div class="meta-box">
+            <span class="meta-label">UTANGA RAPORO / SUPERVISOR</span>
+            <strong class="meta-val" id="viewReporter">Jean Paul M. (0788123456)</strong>
+          </div>
+          <div class="meta-box full-width">
+            <span class="meta-label">AHO BYAKOREWE / SITE ZONE</span>
+            <strong class="meta-val" id="viewSiteZone">Pivot 14 & Main Pumping Station</strong>
+          </div>
+        </div>
+
+        <!-- Metrics bar -->
+        <div class="doc-metrics-row">
+          <div class="metric-chip">
+            <span class="m-label">Abakozi (Workers)</span>
+            <strong class="m-val" id="viewWorkers">14</strong>
+          </div>
+          <div class="metric-chip">
+            <span class="m-label">Amasaha (Hours)</span>
+            <strong class="m-val" id="viewHours">8.5h</strong>
+          </div>
+          <div class="metric-chip">
+            <span class="m-label">Mazutu (Fuel L)</span>
+            <strong class="m-val" id="viewFuel">45 L</strong>
+          </div>
+          <div class="metric-chip">
+            <span class="m-label">Umusaruro (Output)</span>
+            <strong class="m-val" id="viewProduction">18 Hectares</strong>
+          </div>
+        </div>
+
+        <!-- Section A: Activities -->
+        <div class="doc-section">
+          <h4 class="doc-section-title"><i data-lucide="check-circle-2"></i> IBIKORWA BYAKOZWE (ACTIVITIES PERFORMED)
+          </h4>
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>Igikorwa (Activity Name)</th>
+                <th style="width: 130px;">Urwego (Status)</th>
+                <th>Ibisobanuro & Ibyagezweho (Details/Notes)</th>
+              </tr>
+            </thead>
+            <tbody id="viewTasksTableBody">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section B: Issues -->
+        <div class="doc-section">
+          <h4 class="doc-section-title alert"><i data-lucide="alert-triangle"></i> IMBOGAMIZI N'IBIBAZO BYAGARAGAYE
+            (ISSUES & DELAYS)</h4>
+          <table class="doc-table" id="viewIssuesTable">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th style="width: 120px;">Ubukana (Severity)</th>
+                <th>Ibisobanuro by'Ikibazo (Issue Description)</th>
+                <th>Icyakozwe cyangwa Igisabwa (Action Taken / Required)</th>
+              </tr>
+            </thead>
+            <tbody id="viewIssuesTableBody">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section C: Tomorrow's Plan & Remarks -->
+        <div class="doc-split-section">
+          <div class="doc-box">
+            <h5>Gahunda y'Ibikorwa by'Ejo (Tomorrow's Plan):</h5>
+            <p id="viewTomorrowPlan" class="doc-pre-text">--</p>
+          </div>
+          <div class="doc-box">
+            <h5>Icyitonderwa / Ibyifuzo (General Remarks):</h5>
+            <p id="viewRemarks" class="doc-pre-text">--</p>
+          </div>
+        </div>
+
+        <!-- Section D: Photo Attachment if exists -->
+        <div class="doc-photo-section hidden" id="viewPhotoContainer">
+          <h5>Gihamya y'Ifoto (Photo Evidence):</h5>
+          <img id="viewPhotoImg" src="" alt="Report Attachment">
+        </div>
+
+        <!-- Signatures Area -->
+        <div class="doc-signatures">
+          <div class="sig-box">
+            <p class="sig-title">Utanga Raporo (Submitted By):</p>
+            <div class="sig-line"></div>
+            <strong id="viewSigReporter">--</strong>
+            <span class="text-xs text-muted">Itariki n'Igihe: <span id="viewSigSubmittedAt">--</span></span>
+          </div>
+          <div class="sig-box">
+            <p class="sig-title">Umugenzuzi / Umuyobozi (Approved / Verified By):</p>
+            <div class="sig-line"></div>
+            <span>Izina & Umukono</span>
+            <span class="text-xs text-muted">Nasho Project Management</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer no-print">
+        <button class="btn-secondary" onclick="closeReportViewModal()">Funga</button>
+        <button class="btn-primary" onclick="printReportDocument()">
+          <i data-lucide="printer"></i> Gucapa / PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+
+</html>
