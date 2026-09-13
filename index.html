@@ -6377,8 +6377,13 @@ function buildCurrentReport(){
     serviceData:
       collectServiceData(),
 
-    photo:
-      uploadedImageData || "",
+    serviceFields:
+      (service?.fields || []).map(
+        field => ({
+          key: field[0],
+          label: field[1]
+        })
+      ),
 
     submittedAt:
       new Date().toISOString(),
@@ -6477,9 +6482,10 @@ async function submitToGoogleSheet(
           },
 
           body:
-            JSON.stringify(
-              report
-            )
+            JSON.stringify({
+              action:"saveReport",
+              report:report
+            })
 
         }
       );
@@ -7249,10 +7255,7 @@ function saveDraft(){
     selectedService,
 
     serviceData:
-      collectServiceData(),
-
-    photo:
-      uploadedImageData
+      collectServiceData()
 
   };
 
