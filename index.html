@@ -7896,8 +7896,24 @@ function switchTab(
    DASHBOARD LOGIN / ADMIN ACCESS
 ===================================================== */
 
-const DASHBOARD_USERNAME = "admin";
-const DASHBOARD_PASSWORD = "Nasho@2026";
+const ADMIN_ACCOUNTS = [
+  {
+    fullName: "Jean Pierre Nsabimana",
+    username: "jeanpierre",
+    password: "JP2026@NASHO",
+    role: "admin"
+  },
+  {
+    fullName: "Japhet Tuyishime",
+    username: "japhet",
+    password: "JAP2026@NASHO",
+    role: "admin"
+  }
+];
+
+let DASHBOARD_USERNAME = "";
+let DASHBOARD_FULL_NAME = "";
+let DASHBOARD_ROLE = "";
 
 function openDashboardLogin(){
   const modal = document.getElementById("modalDashboardLogin");
@@ -7922,8 +7938,20 @@ function loginToDashboard(){
   const password = document.getElementById("dashboardPassword")?.value || "";
   const error = document.getElementById("dashboardLoginError");
 
-  if(username === DASHBOARD_USERNAME && password === DASHBOARD_PASSWORD){
+  const account = ADMIN_ACCOUNTS.find(
+    user =>
+      user.username === username &&
+      user.password === password
+  );
+
+  if(account){
+    DASHBOARD_USERNAME = account.username;
+    DASHBOARD_FULL_NAME = account.fullName;
+    DASHBOARD_ROLE = account.role;
     sessionStorage.setItem("nasho_dashboard_auth", "1");
+    sessionStorage.setItem("nasho_dashboard_username", account.username);
+    sessionStorage.setItem("nasho_dashboard_full_name", account.fullName);
+    sessionStorage.setItem("nasho_dashboard_role", account.role);
     closeDashboardLogin();
 
     document.querySelectorAll(".tab-pane").forEach(section => section.classList.remove("active"));
@@ -7943,6 +7971,9 @@ function loginToDashboard(){
 
 function logoutDashboard(){
   sessionStorage.removeItem("nasho_dashboard_auth");
+  sessionStorage.removeItem("nasho_dashboard_username");
+  sessionStorage.removeItem("nasho_dashboard_full_name");
+  sessionStorage.removeItem("nasho_dashboard_role");
   document.querySelectorAll(".tab-pane").forEach(section => section.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
   document.getElementById("sectionForm")?.classList.add("active");
@@ -9320,12 +9351,6 @@ async function confirmSubmitReport(){
 
   if(API_URL){
     synced = await submitToGoogleSheet(report);
-    // Notify the configured admin recipients after a successful submission.
-    try{
-      await postAdminAction("notify_submission", { report });
-    }catch(notificationError){
-      console.warn("Submission notification request failed", notificationError);
-    }
   }
 
   showToast(
