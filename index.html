@@ -18,7 +18,6 @@
   <title>
     NASHO HEALTH CENTER | Daily Service Report
   </title>
-
   <!-- =====================================================
        GOOGLE FONTS
   ====================================================== -->
@@ -2295,27 +2294,6 @@
       color:#475569;
 
     }
-
-    .doc-photo-section{
-
-      margin-top:15px;
-
-    }
-
-    .doc-photo-section img{
-
-      max-width:300px;
-
-      max-height:250px;
-
-      object-fit:contain;
-
-      margin-top:8px;
-
-      border-radius:10px;
-
-    }
-
     .doc-signatures{
 
       display:grid;
@@ -2895,7 +2873,306 @@
 
     }
 
-  </style>
+
+    /* =====================================================
+       PREMIUM SMOOTH COLOR / VISUAL POLISH
+       ===================================================== */
+
+    body{
+      background:
+        radial-gradient(circle at 8% 8%, rgba(16,185,129,.10), transparent 28%),
+        radial-gradient(circle at 92% 12%, rgba(37,99,235,.08), transparent 25%),
+        radial-gradient(circle at 50% 100%, rgba(124,58,237,.06), transparent 30%),
+        linear-gradient(135deg,#f7fbfa 0%,#f5f8fc 48%,#f8f7fc 100%);
+      background-attachment:fixed;
+    }
+
+    .top-nav{
+      background:rgba(255,255,255,.82);
+      box-shadow:0 8px 30px rgba(15,23,42,.05);
+    }
+
+    .logo-badge{
+      background:
+        linear-gradient(135deg,#10b981 0%,#087f5b 48%,#065f46 100%);
+      box-shadow:
+        0 10px 24px rgba(8,127,91,.22),
+        inset 0 1px 0 rgba(255,255,255,.28);
+    }
+
+    .main-tabs{
+      background:rgba(255,255,255,.78);
+      backdrop-filter:blur(14px);
+    }
+
+    .content-wrapper{
+      position:relative;
+    }
+
+    .form-card,
+    .content-card,
+    .table-card,
+    .filter-card,
+    .stat-card{
+      box-shadow:
+        0 12px 35px rgba(15,23,42,.055),
+        0 2px 8px rgba(15,23,42,.025);
+      transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
+    }
+
+    .form-card:hover,
+    .content-card:hover,
+    .filter-card:hover{
+      box-shadow:
+        0 18px 45px rgba(15,23,42,.08),
+        0 3px 12px rgba(16,185,129,.04);
+      border-color:#d6e9e2;
+    }
+
+    .service-card{
+      background:
+        linear-gradient(145deg,rgba(255,255,255,.98),rgba(248,251,250,.94));
+      box-shadow:0 5px 16px rgba(15,23,42,.035);
+    }
+
+    .service-card:nth-child(4n+1) .service-card-icon{
+      background:#ecfdf5;
+      color:#059669;
+    }
+
+    .service-card:nth-child(4n+2) .service-card-icon{
+      background:#eff6ff;
+      color:#2563eb;
+    }
+
+    .service-card:nth-child(4n+3) .service-card-icon{
+      background:#f5f3ff;
+      color:#7c3aed;
+    }
+
+    .service-card:nth-child(4n+4) .service-card-icon{
+      background:#fff7ed;
+      color:#ea580c;
+    }
+
+    .service-card.active{
+      background:
+        linear-gradient(145deg,#ecfdf5 0%,#ffffff 100%);
+      border-color:#34d399;
+      box-shadow:
+        0 12px 28px rgba(16,185,129,.12),
+        0 0 0 3px rgba(52,211,153,.07);
+    }
+
+    .service-card.active .service-card-icon{
+      background:white;
+      box-shadow:0 5px 15px rgba(15,23,42,.06);
+    }
+
+    .btn-primary{
+      background:
+        linear-gradient(135deg,#10b981 0%,#087f5b 55%,#056044 100%);
+      box-shadow:
+        0 8px 20px rgba(8,127,91,.20),
+        inset 0 1px 0 rgba(255,255,255,.16);
+    }
+
+    .btn-primary:hover{
+      background:
+        linear-gradient(135deg,#14b889 0%,#087f5b 55%,#04563f 100%);
+      box-shadow:0 12px 25px rgba(8,127,91,.25);
+    }
+
+    .btn-secondary:hover,
+    .btn-primary-outline:hover{
+      transform:translateY(-1px);
+    }
+
+    input,
+    select,
+    textarea{
+      background:rgba(255,255,255,.92);
+      box-shadow:inset 0 1px 2px rgba(15,23,42,.025);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus{
+      border-color:#10b981;
+      box-shadow:
+        0 0 0 4px rgba(16,185,129,.10),
+        0 5px 16px rgba(16,185,129,.05);
+    }
+
+    .form-submit-panel{
+      background:
+        radial-gradient(circle at 90% 0%,rgba(16,185,129,.10),transparent 35%),
+        linear-gradient(135deg,#ecfdf5 0%,#ffffff 55%,#eff6ff 100%);
+      box-shadow:0 10px 30px rgba(16,185,129,.06);
+    }
+
+    .stat-card{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .stat-card::after{
+      content:"";
+      position:absolute;
+      width:90px;
+      height:90px;
+      right:-35px;
+      top:-35px;
+      border-radius:50%;
+      background:rgba(16,185,129,.055);
+      pointer-events:none;
+    }
+
+    .sheet-status-pill{
+      background:rgba(248,250,252,.88);
+      backdrop-filter:blur(8px);
+    }
+
+    .modal-backdrop{
+      background:rgba(8,20,32,.52);
+      backdrop-filter:blur(8px);
+    }
+
+    .modal-dialog{
+      box-shadow:
+        0 25px 70px rgba(15,23,42,.20),
+        0 5px 20px rgba(15,23,42,.08);
+    }
+
+    .toast{
+      backdrop-filter:blur(10px);
+      box-shadow:
+        0 15px 35px rgba(15,23,42,.18);
+    }
+
+    .upload-box{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(16,185,129,.06),transparent 45%),
+        #f8fafc;
+      transition:.25s ease;
+    }
+
+    .upload-box:hover{
+      border-color:#6ee7b7;
+      background:
+        radial-gradient(circle at 50% 0%,rgba(16,185,129,.10),transparent 50%),
+        #f8fffc;
+    }
+
+    .history-item-icon{
+      box-shadow:0 6px 16px rgba(8,127,91,.08);
+    }
+
+    .progress-fill{
+      background:
+        linear-gradient(90deg,#10b981,#087f5b);
+    }
+
+    @media(max-width:620px){
+      body{
+        background:
+          linear-gradient(160deg,#f7fbfa 0%,#f5f8fc 60%,#faf8ff 100%);
+      }
+    }
+
+  
+    /* =====================================================
+       LANGUAGE SETTINGS
+    ====================================================== */
+
+    .language-choice-grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .language-choice{
+      width:100%;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:13px;
+      padding:15px 16px;
+      border:1px solid #dbe7e3;
+      border-radius:15px;
+      background:rgba(255,255,255,.78);
+      cursor:pointer;
+      text-align:left;
+      transition:all .22s ease;
+      box-shadow:0 5px 18px rgba(15,23,42,.05);
+    }
+
+    .language-choice:hover{
+      transform:translateY(-2px);
+      border-color:#8fd5bd;
+      box-shadow:0 10px 24px rgba(16,185,129,.12);
+    }
+
+    .language-choice.active{
+      border-color:#10b981;
+      background:linear-gradient(135deg,rgba(236,253,245,.98),rgba(239,246,255,.92));
+      box-shadow:0 10px 28px rgba(16,185,129,.14);
+    }
+
+    .language-choice-icon{
+      width:42px;
+      height:42px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background:#f8fafc;
+      font-size:22px;
+    }
+
+    .language-choice strong{
+      display:block;
+      color:#0f172a;
+      font-size:14px;
+    }
+
+    .language-choice small{
+      display:block;
+      margin-top:3px;
+      color:#64748b;
+      font-size:11px;
+    }
+
+    .language-choice > svg{
+      color:#10b981;
+      width:20px;
+      height:20px;
+    }
+
+
+/* =====================================================
+   DASHBOARD LOGIN POLISH
+===================================================== */
+.dashboard-login-dialog{
+  max-width:520px;
+  width:min(92vw,520px);
+}
+.login-error{
+  margin-top:14px;
+  padding:11px 13px;
+  border-radius:12px;
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  color:#be123c;
+  font-size:13px;
+  font-weight:600;
+}
+.dashboard-logout-btn{
+  margin-left:8px;
+}
+
+</style>
 
 </head>
 
@@ -2945,28 +3222,6 @@
 
     <div class="nav-actions">
 
-      <div
-        class="sheet-status-pill"
-        onclick="openGoogleSheetModal()"
-      >
-
-        <span
-          class="status-dot disconnected"
-          id="sheetStatusDot"
-        ></span>
-
-        <i data-lucide="database"></i>
-
-        <span
-          class="sheet-status-text"
-          id="sheetStatusText"
-        >
-          Google Sheet: Ntidahuje
-        </span>
-
-      </div>
-
-
       <div class="lang-switch-group">
 
         <button
@@ -2990,8 +3245,8 @@
 
       <button
         class="icon-action-btn"
-        onclick="openGoogleSheetModal()"
-        title="Settings"
+        onclick="openLanguageModal()"
+        title="Language Settings"
       >
 
         <i data-lucide="settings"></i>
@@ -3076,20 +3331,6 @@
 
     </button>
 
-
-    <button
-      class="tab-btn"
-      onclick="openGoogleSheetModal()"
-    >
-
-      <i data-lucide="file-spreadsheet"></i>
-
-      <span>
-        Google Sheet
-      </span>
-
-    </button>
-
   </nav>
 
 
@@ -3122,34 +3363,6 @@
           <p class="pane-desc">
             Uzuza amakuru yawe n'ibikorwa bya service wakozemo uyu munsi.
           </p>
-
-        </div>
-
-
-        <div class="header-tools">
-
-          <button
-            class="btn-secondary"
-            onclick="loadDraft()"
-          >
-
-            <i data-lucide="rotate-ccw"></i>
-
-            Kugarura Draft
-
-          </button>
-
-
-          <button
-            class="btn-secondary"
-            onclick="resetForm()"
-          >
-
-            <i data-lucide="trash-2"></i>
-
-            Guhanagura
-
-          </button>
 
         </div>
 
@@ -3402,118 +3615,12 @@
 
 
         <!-- =============================================
-             PHOTO
-        ============================================== -->
-
-        <div class="form-card">
-
-          <div class="card-header-line">
-
-            <div class="card-icon-wrap">
-
-              <i data-lucide="camera"></i>
-
-            </div>
-
-            <div>
-
-              <h3>
-                Gihamya y'Ifoto
-              </h3>
-
-              <p class="section-hint">
-                Ushobora gushyiraho ifoto y'ibikorwa cyangwa ikibazo.
-              </p>
-
-            </div>
-
-          </div>
-
-
-          <div
-            class="upload-box"
-            id="uploadDropzone"
-          >
-
-            <input
-              type="file"
-              id="reportPhoto"
-              accept="image/*"
-              onchange="handleImageUpload(event)"
-            >
-
-
-            <div
-              class="upload-content"
-              id="uploadPlaceholder"
-            >
-
-              <i
-                data-lucide="image-plus"
-                class="upload-icon"
-              ></i>
-
-              <strong>
-                Kanda hano ushyireho ifoto
-              </strong>
-
-              <small class="text-muted">
-                JPG, PNG cyangwa WEBP • Max 5MB
-              </small>
-
-            </div>
-
-
-            <div
-              class="image-preview-wrapper hidden"
-              id="imagePreviewContainer"
-            >
-
-              <img
-                id="imagePreview"
-                src=""
-                alt="Preview"
-              >
-
-              <button
-                type="button"
-                class="btn-remove-img"
-                onclick="removeUploadedImage()"
-              >
-
-                <i data-lucide="x"></i>
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        <!-- =============================================
              SUBMIT
         ============================================== -->
 
         <div class="form-submit-panel">
 
           <div class="submit-info">
-
-            <label class="checkbox-container">
-
-              <input
-                type="checkbox"
-                id="autoSyncToGoogleSheet"
-                checked
-              >
-
-              <span>
-                Kohereza muri Google Sheet ako kanya
-              </span>
-
-            </label>
 
 
             <span
@@ -3531,19 +3638,6 @@
 
 
           <div class="submit-actions">
-
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick="previewCurrentReport()"
-            >
-
-              <i data-lucide="eye"></i>
-
-              Reba mbere yo kohereza
-
-            </button>
-
 
             <button
               type="submit"
@@ -3603,6 +3697,11 @@
 
             Refresh
 
+          </button>
+
+          <button class="btn-secondary dashboard-logout-btn" onclick="logoutDashboard()">
+            <i data-lucide="log-out"></i>
+            Logout
           </button>
 
         </div>
@@ -4336,20 +4435,7 @@
 
     <div class="footer-right">
 
-      <span
-        class="sync-footer-link"
-        onclick="openGoogleSheetModal()"
-      >
-
-        <i data-lucide="link-2"></i>
-
-        Google Sheet
-
-      </span>
-
-      <span>
-        •
-      </span>
+      <span>•</span>
 
       <span>
         Rwanda 🇷🇼
@@ -4364,12 +4450,12 @@
 
 
 <!-- =====================================================
-     GOOGLE SHEET MODAL
+     LANGUAGE SETTINGS MODAL
 ====================================================== -->
 
 <div
   class="modal-backdrop hidden"
-  id="modalGoogleSheet"
+  id="modalLanguage"
 >
 
   <div class="modal-dialog">
@@ -4378,136 +4464,70 @@
 
       <div class="modal-title-wrap">
 
-        <div class="modal-icon-badge">
-
-          <i data-lucide="file-spreadsheet"></i>
-
+        <div class="modal-icon-badge emerald">
+          <i data-lucide="languages"></i>
         </div>
 
         <div>
-
-          <h3 class="modal-title">
-            Google Sheet Settings
-          </h3>
-
-          <p class="modal-desc">
-            Huza website na Google Apps Script.
-          </p>
-
+          <h3 class="modal-title">Guhindura Ururimi</h3>
+          <p class="modal-desc">Hitamo ururimi ushaka gukoresha muri system.</p>
         </div>
 
       </div>
 
-
       <button
         class="modal-close"
-        onclick="closeGoogleSheetModal()"
+        onclick="closeLanguageModal()"
       >
-
         <i data-lucide="x"></i>
-
       </button>
 
     </div>
 
-
     <div class="modal-body">
 
+      <div class="language-choice-grid">
 
-      <div class="form-group">
-
-        <label>
-          Google Apps Script Web App URL
-        </label>
-
-        <input
-          type="url"
-          id="googleSheetWebhookUrl"
-          placeholder="https://script.google.com/macros/s/.../exec"
+        <button
+          type="button"
+          class="language-choice active"
+          id="settingsLangRw"
+          onclick="setLanguage('rw'); updateLanguageChoices();"
         >
+          <span class="language-choice-icon">🇷🇼</span>
+          <span>
+            <strong>Kinyarwanda</strong>
+            <small>Ururimi rw'u Rwanda</small>
+          </span>
+          <i data-lucide="check-circle-2"></i>
+        </button>
 
-      </div>
-
-
-      <div
-        class="form-group"
-        style="margin-top:15px"
-      >
-
-        <label>
-          Google Sheet Link
-        </label>
-
-        <input
-          type="url"
-          id="googleSheetDirectUrl"
-          placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+        <button
+          type="button"
+          class="language-choice"
+          id="settingsLangEn"
+          onclick="setLanguage('en'); updateLanguageChoices();"
         >
-
-      </div>
-
-
-      <div
-        style="
-          margin-top:20px;
-          padding:15px;
-          border-radius:13px;
-          background:#f0fdf9;
-          color:#166534;
-          font-size:12px;
-          line-height:1.6;
-        "
-      >
-
-        <strong>
-          Uko wabona Web App URL:
-        </strong>
-
-        <br>
-
-        Google Sheet → Extensions → Apps Script
-        → Deploy → New deployment → Web app.
-
-        <br>
-
-        <strong>
-          Execute as:
-        </strong>
-        Me
-
-        <br>
-
-        <strong>
-          Who has access:
-        </strong>
-        Anyone
+          <span class="language-choice-icon">🇬🇧</span>
+          <span>
+            <strong>English</strong>
+            <small>English language</small>
+          </span>
+          <i data-lucide="circle"></i>
+        </button>
 
       </div>
 
     </div>
-
 
     <div class="modal-footer">
 
       <button
-        class="btn-secondary"
-        onclick="closeGoogleSheetModal()"
-      >
-
-        Funga
-
-      </button>
-
-
-      <button
         class="btn-primary"
-        onclick="saveGoogleSheetSettings()"
+        onclick="closeLanguageModal()"
       >
-
-        <i data-lucide="save"></i>
-
-        Bika
-
+        <i data-lucide="check"></i>
+        Done
       </button>
 
     </div>
@@ -4517,6 +4537,39 @@
 </div>
 
 
+<!-- =====================================================
+     DASHBOARD LOGIN MODAL
+====================================================== -->
+
+<div class="modal-backdrop hidden" id="modalDashboardLogin">
+  <div class="modal-dialog dashboard-login-dialog">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon-badge emerald"><i data-lucide="shield-check"></i></div>
+        <div>
+          <h3 class="modal-title">Dashboard Login</h3>
+          <p class="modal-desc">Injiza username na password bya Admin kugira ngo ubone Dashboard.</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeDashboardLogin()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="dashboardUsername">Username</label>
+        <input type="text" id="dashboardUsername" autocomplete="username" placeholder="Andika username">
+      </div>
+      <div class="form-group" style="margin-top:15px">
+        <label for="dashboardPassword">Password</label>
+        <input type="password" id="dashboardPassword" autocomplete="current-password" placeholder="Andika password">
+      </div>
+      <div id="dashboardLoginError" class="login-error hidden">Username cyangwa password ntabwo ari byo.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeDashboardLogin()">Funga</button>
+      <button class="btn-primary" onclick="loginToDashboard()"><i data-lucide="log-in"></i> Injira muri Dashboard</button>
+    </div>
+  </div>
+</div>
 
 <!-- =====================================================
      REPORT VIEW MODAL
@@ -4555,18 +4608,6 @@
 
 
       <div style="display:flex;gap:7px">
-
-        <button
-          class="btn-primary-outline btn-sm"
-          onclick="printReportDocument()"
-        >
-
-          <i data-lucide="printer"></i>
-
-          PDF / Print
-
-        </button>
-
 
         <button
           class="modal-close"
@@ -4758,25 +4799,6 @@
 
 
 
-      <div
-        class="doc-photo-section hidden"
-        id="viewPhotoContainer"
-      >
-
-        <h5>
-          Photo Evidence
-        </h5>
-
-        <img
-          id="viewPhotoImg"
-          src=""
-          alt="Report Photo"
-        >
-
-      </div>
-
-
-
       <div class="doc-signatures">
 
         <div class="sig-box">
@@ -4827,25 +4849,24 @@
 
 
 
-    <div class="modal-footer no-print">
+    <div class="modal-footer no-print" id="reportReviewFooter">
 
       <button
         class="btn-secondary"
-        onclick="closeReportViewModal()"
+        id="btnBackToChange"
+        onclick="backToChange()"
       >
-        Funga
+        <i data-lucide="arrow-left"></i>
+        Back to Change
       </button>
-
 
       <button
         class="btn-primary"
-        onclick="printReportDocument()"
+        id="btnConfirmSubmitReport"
+        onclick="confirmSubmitReport()"
       >
-
-        <i data-lucide="printer"></i>
-
-        Gucapa / PDF
-
+        <i data-lucide="send"></i>
+        Submit Report
       </button>
 
     </div>
@@ -4883,6 +4904,9 @@
 
 let API_URL =
   localStorage.getItem("nasho_api_url") || "";
+
+// Report waiting for final confirmation from the review window
+let pendingReport = null;
 
 
 
@@ -5663,7 +5687,7 @@ function initializeApplication(){
 
   loadStoredReports();
 
-  loadGoogleSheetSettings();
+
 
   renderServiceSelector();
 
@@ -6155,98 +6179,26 @@ async function handleFormSubmit(
 
   event.preventDefault();
 
-
   if(!selectedService){
-
     showToast(
       "Banza uhitemo service wakozemo.",
       "error"
     );
-
     return;
-
   }
 
-
-  const form =
-    document.getElementById(
-      "dailyReportForm"
-    );
-
+  const form = document.getElementById("dailyReportForm");
 
   if(!form.checkValidity()){
-
     form.reportValidity();
-
     return;
-
   }
 
-
-  const report =
-    buildCurrentReport();
-
-
-  reports.push(
-    report
-  );
-
-
-  saveReports();
-
-
-  rememberEmail(
-    report.reporterEmail
-  );
-
-
-  const autoSync =
-    document.getElementById(
-      "autoSyncToGoogleSheet"
-    ).checked;
-
-
-  let synced =
-    false;
-
-
-  if(
-    autoSync &&
-    API_URL
-  ){
-
-    synced =
-      await submitToGoogleSheet(
-        report
-      );
-
-  }
-
-
-  showToast(
-    synced
-      ? "Raporo yatanzwe kandi yabitswe muri Google Sheet."
-      : "Raporo yabitswe muri system.",
-    "success"
-  );
-
-
-  updateDashboard();
-
-  renderHistoryTable(
-    reports
-  );
-
-
-  openReportViewModal(
-    report
-  );
-
-
-  clearFormAfterSubmit();
+  // Do not save yet. Show the report review first.
+  pendingReport = buildCurrentReport();
+  openReportViewModal(pendingReport, true);
 
 }
-
 
 
 /* =====================================================
@@ -6302,10 +6254,8 @@ async function submitToGoogleSheet(
     );
 
 
-    document.getElementById(
-      "sheetStatusText"
-    ).textContent =
-      "Google Sheet: Connected";
+    const sheetText = document.getElementById("sheetStatusText");
+    if(sheetText) sheetText.textContent = "Google Sheet: Connected";
 
 
     return true;
@@ -6977,6 +6927,11 @@ function switchTab(
   tab
 ){
 
+  if(tab === "dashboard" && sessionStorage.getItem("nasho_dashboard_auth") !== "1"){
+    openDashboardLogin();
+    return;
+  }
+
   document
     .querySelectorAll(
       ".tab-pane"
@@ -7055,6 +7010,64 @@ function switchTab(
 }
 
 
+
+/* =====================================================
+   DASHBOARD LOGIN / ADMIN ACCESS
+===================================================== */
+
+const DASHBOARD_USERNAME = "admin";
+const DASHBOARD_PASSWORD = "Nasho@2026";
+
+function openDashboardLogin(){
+  const modal = document.getElementById("modalDashboardLogin");
+  if(modal){
+    modal.classList.remove("hidden");
+    const u = document.getElementById("dashboardUsername");
+    const pw = document.getElementById("dashboardPassword");
+    const err = document.getElementById("dashboardLoginError");
+    if(err) err.classList.add("hidden");
+    if(u){ u.focus(); }
+    if(pw) pw.value = "";
+    if(window.lucide) lucide.createIcons();
+  }
+}
+
+function closeDashboardLogin(){
+  document.getElementById("modalDashboardLogin")?.classList.add("hidden");
+}
+
+function loginToDashboard(){
+  const username = document.getElementById("dashboardUsername")?.value.trim() || "";
+  const password = document.getElementById("dashboardPassword")?.value || "";
+  const error = document.getElementById("dashboardLoginError");
+
+  if(username === DASHBOARD_USERNAME && password === DASHBOARD_PASSWORD){
+    sessionStorage.setItem("nasho_dashboard_auth", "1");
+    closeDashboardLogin();
+
+    document.querySelectorAll(".tab-pane").forEach(section => section.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("sectionDashboard")?.classList.add("active");
+    document.getElementById("tabBtnDashboard")?.classList.add("active");
+    updateDashboard();
+    showToast("Dashboard yafunguwe neza.", "success");
+    return;
+  }
+
+  if(error){
+    error.textContent = "Username cyangwa password ntabwo ari byo.";
+    error.classList.remove("hidden");
+  }
+}
+
+function logoutDashboard(){
+  sessionStorage.removeItem("nasho_dashboard_auth");
+  document.querySelectorAll(".tab-pane").forEach(section => section.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+  document.getElementById("sectionForm")?.classList.add("active");
+  document.getElementById("tabBtnForm")?.classList.add("active");
+  showToast("Wasohotse muri Dashboard.", "info");
+}
 
 /* =====================================================
    DASHBOARD
@@ -8107,6 +8120,19 @@ function displayMyHistory(
 
               </button>
 
+
+              <button
+                class="btn-primary-outline btn-sm"
+                onclick="printHistoryReport(${index})"
+                title="Print / PDF"
+              >
+
+                <i data-lucide="printer"></i>
+
+                Print / PDF
+
+              </button>
+
             </div>
 
           </div>
@@ -8156,6 +8182,31 @@ function openHistoryReport(
 
 
 /* =====================================================
+   PRINT HISTORY REPORT
+===================================================== */
+
+function printHistoryReport(index){
+
+  const report =
+    window.currentMyHistorySorted?.[index];
+
+  if(!report){
+    showToast("Raporo ntiyabonetse.", "error");
+    return;
+  }
+
+  openReportViewModal(report, false);
+
+  // Give the modal/icons a moment to render before opening print dialog.
+  setTimeout(()=>{
+    printReportDocument();
+  }, 250);
+
+}
+
+
+
+/* =====================================================
    OPEN REPORT
 ===================================================== */
 
@@ -8186,7 +8237,8 @@ function openReportById(
 ===================================================== */
 
 function openReportViewModal(
-  report
+  report,
+  reviewMode = false
 ){
 
   if(!report)
@@ -8324,38 +8376,20 @@ function openReportViewModal(
   }
 
 
-  const photoContainer =
-    document.getElementById(
-      "viewPhotoContainer"
-    );
+  const backButton = document.getElementById("btnBackToChange");
+  const confirmButton = document.getElementById("btnConfirmSubmitReport");
 
-
-  const photo =
-    document.getElementById(
-      "viewPhotoImg"
-    );
-
-
-  if(report.photo){
-
-    photo.src =
-      report.photo;
-
-    photoContainer.classList.remove(
-      "hidden"
-    );
-
-  }else{
-
-    photo.src =
-      "";
-
-    photoContainer.classList.add(
-      "hidden"
-    );
-
+  if(backButton && confirmButton){
+    if(reviewMode){
+      backButton.classList.remove("hidden");
+      confirmButton.classList.remove("hidden");
+      confirmButton.disabled = false;
+      confirmButton.innerHTML = `<i data-lucide="send"></i> Submit Report`;
+    }else{
+      backButton.classList.add("hidden");
+      confirmButton.classList.add("hidden");
+    }
   }
-
 
   document
     .getElementById(
@@ -8374,10 +8408,70 @@ function openReportViewModal(
 
 
 /* =====================================================
+   CONFIRM REPORT SUBMISSION
+===================================================== */
+
+async function confirmSubmitReport(){
+
+  if(!pendingReport){
+    showToast("Nta raporo iri gutegereje koherezwa.","error");
+    return;
+  }
+
+  const report = pendingReport;
+  const button = document.getElementById("btnConfirmSubmitReport");
+
+  if(button){
+    button.disabled = true;
+    button.innerHTML = `<i data-lucide="loader-circle"></i> Kohereza...`;
+    if(window.lucide) lucide.createIcons();
+  }
+
+  reports.push(report);
+  saveReports();
+  rememberEmail(report.reporterEmail);
+
+  let synced = false;
+
+  if(API_URL){
+    synced = await submitToGoogleSheet(report);
+  }
+
+  showToast(
+    synced
+      ? "Raporo yatanzwe kandi yabitswe muri Google Sheet."
+      : "Raporo yatanzwe kandi yabitswe muri system.",
+    "success"
+  );
+
+  updateDashboard();
+  renderHistoryTable(reports);
+
+  pendingReport = null;
+  clearFormAfterSubmit();
+  openReportViewModal(report, false);
+
+}
+
+
+/* =====================================================
+   BACK TO CHANGE
+===================================================== */
+
+function backToChange(){
+  closeReportViewModal(false);
+  showToast(
+    "Subira kuri form uhindure ibyo ushaka mbere yo kohereza.",
+    "info"
+  );
+}
+
+
+/* =====================================================
    CLOSE REPORT
 ===================================================== */
 
-function closeReportViewModal(){
+function closeReportViewModal(clearPending = true){
 
   document
     .getElementById(
@@ -8386,6 +8480,10 @@ function closeReportViewModal(){
     .classList.add(
       "hidden"
     );
+
+  if(clearPending){
+    pendingReport = null;
+  }
 
 }
 
@@ -8434,178 +8532,48 @@ function previewCurrentReport(){
 
 
 /* =====================================================
-   GOOGLE SHEET SETTINGS
+   LANGUAGE SETTINGS
 ===================================================== */
 
-function openGoogleSheetModal(){
+function openLanguageModal(){
 
-  document
-    .getElementById(
-      "modalGoogleSheet"
-    )
-    .classList.remove(
-      "hidden"
-    );
+  const modal = document.getElementById("modalLanguage");
+
+  if(modal){
+    modal.classList.remove("hidden");
+    updateLanguageChoices();
+    if(window.lucide) lucide.createIcons();
+  }
 
 }
 
+function closeLanguageModal(){
 
+  const modal = document.getElementById("modalLanguage");
 
-function closeGoogleSheetModal(){
-
-  document
-    .getElementById(
-      "modalGoogleSheet"
-    )
-    .classList.add(
-      "hidden"
-    );
+  if(modal){
+    modal.classList.add("hidden");
+  }
 
 }
 
+function updateLanguageChoices(){
 
+  const current = localStorage.getItem("nasho_language") || "rw";
+  const rw = document.getElementById("settingsLangRw");
+  const en = document.getElementById("settingsLangEn");
 
-function saveGoogleSheetSettings(){
+  [rw,en].forEach(btn => {
+    if(btn) btn.classList.remove("active");
+  });
 
-  const url =
-    document
-      .getElementById(
-        "googleSheetWebhookUrl"
-      )
-      .value
-      .trim();
+  const active = current === "en" ? en : rw;
 
-
-  const sheetUrl =
-    document
-      .getElementById(
-        "googleSheetDirectUrl"
-      )
-      .value
-      .trim();
-
-
-  if(url){
-
-    localStorage.setItem(
-      "nasho_api_url",
-      url
-    );
-
-    API_URL =
-      url;
-
+  if(active){
+    active.classList.add("active");
   }
 
-
-  if(sheetUrl){
-
-    localStorage.setItem(
-      "nasho_sheet_url",
-      sheetUrl
-    );
-
-  }
-
-
-  updateSheetStatus();
-
-  closeGoogleSheetModal();
-
-
-  showToast(
-    "Google Sheet settings zabitswe.",
-    "success"
-  );
-
-}
-
-
-
-function loadGoogleSheetSettings(){
-
-  const url =
-    localStorage.getItem(
-      "nasho_api_url"
-    );
-
-
-  const sheetUrl =
-    localStorage.getItem(
-      "nasho_sheet_url"
-    );
-
-
-  if(url){
-
-    API_URL =
-      url;
-
-    document.getElementById(
-      "googleSheetWebhookUrl"
-    ).value =
-      url;
-
-  }
-
-
-  if(sheetUrl){
-
-    document.getElementById(
-      "googleSheetDirectUrl"
-    ).value =
-      sheetUrl;
-
-  }
-
-
-  updateSheetStatus();
-
-}
-
-
-
-function updateSheetStatus(){
-
-  const dot =
-    document.getElementById(
-      "sheetStatusDot"
-    );
-
-
-  const text =
-    document.getElementById(
-      "sheetStatusText"
-    );
-
-
-  if(API_URL){
-
-    dot.classList.remove(
-      "disconnected"
-    );
-
-    dot.classList.add(
-      "connected"
-    );
-
-    text.textContent =
-      "Google Sheet: Connected";
-
-  }else{
-
-    dot.classList.remove(
-      "connected"
-    );
-
-    dot.classList.add(
-      "disconnected"
-    );
-
-    text.textContent =
-      "Google Sheet: Ntidahuje";
-
-  }
+  if(window.lucide) lucide.createIcons();
 
 }
 
