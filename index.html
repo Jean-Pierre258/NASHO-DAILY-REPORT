@@ -86,7 +86,32 @@
       display:none !important;
     }
 
+const API_URL = "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
 
+fetch(SCRIPT_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "text/plain;charset=utf-8"
+  },
+  body: JSON.stringify(data)
+})
+.then(response => response.json())
+.then(result => {
+  console.log(result);
+
+  if (result.status === "SUCCESS") {
+    alert("Report submitted successfully.");
+  } else {
+    alert("Error: " + result.message);
+  }
+})
+.catch(error => {
+  console.error(error);
+  alert("Submission failed.");
+});
+
+
+    
     /* =====================================================
        VARIABLES
     ====================================================== */
