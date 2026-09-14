@@ -5192,6 +5192,8 @@ const SERVICES = {
 
     fields:[
 
+      ["recommendations","Recommendations","textarea",true],
+
       ["patients_received","Number of patients received","number",true],
 
       ["discharged","Number discharged","number",true],
@@ -6461,69 +6463,75 @@ async function submitToGoogleSheet(
   report
 ){
 
-  if(!API_URL)
-    return false;
+  if(!API_URL) return false;
 
+  const REPORT_TYPES = {
+    OPD:"OPD", IMCI:"IMCI", ANC:"ANC", PNC:"PNC",
+    MATERNITY:"MATERNITY", EPI:"VACCINATION",
+    LABORATORY:"LABORATORY", NUTRITION:"NUTRITION",
+    PHARMACY:"PHARMACY", FP:"FAMILY_PLANNING", HIV:"HIV",
+    TB:"TB", NCD:"NCD", MENTAL_HEALTH:"MENTAL_HEALTH",
+    DENTAL:"DENTAL", EYE_CARE:"EYE_CARE", GBV:"GBV",
+    INPATIENT:"INPATIENT", OTHER:"OTHER"
+  };
+
+  const FIELD_MAP = {
+    OPD:{recommendations:"recommendations",patients_received:"patientsReceived",discharged:"discharged",not_discharged:"notDischarged",referred:"referred",admitted:"admitted",lost_not_completed:"lostNotCompleted",reason:"reason",challenges:"challenges"},
+    IMCI:{recommendations:"recommendations",children_received:"childrenReceived",children_treated:"childrenTreated",discharged:"discharged",not_discharged:"notDischarged",referred:"referred",admitted:"admitted",lost_not_completed:"lostNotCompleted",reason:"mainReason"},
+    ANC:{challenges:"challengesEncountered",recommendations:"recommendations",new_registrations:"ancNewRegistrations",revisits:"ancRevisits",total_clients:"ancTotalReceived",muac_screened:"ancMUAC",mms:"ancMMS",ifa:"ancIFA",referred:"ancReferred",not_completed:"ancNotCompleted",reason:"ancReason",challenges_2:"ancAdditionalChallenges"},
+    PNC:{recommendations:"recommendations",mothers_received:"mothersReceived",newborns_received:"newbornsReceived",first_pnc:"firstPNCVisits",followup:"pncFollowUpVisits",mothers_discharged:"mothersDischarged",not_discharged:"notDischarged",referred:"referred",lost_not_completed:"lostNotCompleted",reason:"reason"},
+    MATERNITY:{challenges:"challengesEncountered",recommendations:"recommendations",mothers_in_labor:"mothersReceivedLabor",deliveries:"deliveriesConducted",normal_deliveries:"normalDeliveries",complicated_deliveries:"complicatedDeliveries",mothers_referred:"mothersReferred",mothers_admitted:"mothersAdmitted",mothers_discharged:"mothersDischarged",not_discharged:"notDischarged",lost_not_completed:"lostNotCompleted",reason:"reason"},
+    EPI:{recommendations:"recommendations",children_received:"childrenReceived",children_vaccinated:"childrenVaccinated",new_registered:"newChildrenRegistered",scheduled_vaccines:"scheduledVaccines",missed_vaccination:"missedVaccination",referred:"referred",not_vaccinated:"notVaccinated",lost_not_completed:"lostNotCompleted",reason:"reason",not_recorded:"notRecorded",challenges:"challenges"},
+    LABORATORY:{patients_received:"patientsReceived",lab_requests:"labRequests",tests_performed:"testsPerformed",results_completed:"resultsCompleted",results_pending:"resultsPending",patients_referred:"patientsReferred",patients_not_completed:"patientsNotCompleted",reason:"mainReason",out_of_stock:"outOfStock",challenges:"challenges",recommendations:"recommendations"},
+    NUTRITION:{challenges:"challenges",recommendations:"recommendations",clients_received:"clientsReceived",screened:"screened",muac_measured:"muacMeasured",mam:"mamCases",sam:"samCases",referred:"referred",treated_followup:"treatedFollowed",discharged:"discharged",lost_not_completed:"lostNotCompleted",reason:"reason"},
+    PHARMACY:{recommendations:"recommendations",patients_served:"patientsServed",referred_unavailable:"patientsReferredUnavailable",drugs_out_stock:"drugsOutOfStock",patients_not_completed:"patientsNotCompleted",reason:"reason"},
+    FP:{recommendations:"recommendations",clients_received:"clientsReceived",new_clients:"newClients",continuing_clients:"continuingClients",short_term:"shortTerm",long_term:"longTerm",permanent:"permanentMethods",referred:"referred",not_served:"notServed",reason:"reason"},
+    HIV:{clients_received:"clientsReceived",tested:"tested",positive:"hivPositive",negative:"hivNegative",linked_care:"linkedToCare",started_treatment:"startedTreatment",referred:"referred",not_completed:"notCompleted",lost_not_completed:"lostNotCompleted",reason:"reason",challenges:"challenges",recommendations:"recommendations"},
+    TB:{clients_screened:"clientsScreened",presumptive_cases:"presumptiveCases",tested:"tested",confirmed_cases:"confirmedCases",started_treatment:"startedTreatment",referred:"referred",discharged_completed:"dischargedCompleted",lost_not_completed:"lostNotCompleted",reason:"reason",challenges:"challenges",recommendations:"recommendations"},
+    NCD:{patients_received:"patientsReceived",screened:"screened",hypertension:"hypertensionCases",diabetes:"diabetesCases",other_ncd:"otherNcdCases",treated:"treated",referred:"referred",discharged:"discharged",not_discharged:"notDischarged",lost_not_completed:"lostNotCompleted",reason:"reason",challenges:"challenges",recommendations:"recommendations"},
+    MENTAL_HEALTH:{clients_received:"clientsReceived",new_cases:"newCases",followup:"followUpClients",treated_counseled:"treatedCounseled",referred:"referred",discharged:"discharged",not_discharged:"notDischarged",lost_not_completed:"lostNotCompleted",reason:"reason"},
+    DENTAL:{challenges:"challenges",recommendations:"recommendations",patients_received:"patientsReceived",new_patients:"newPatients",followup:"followUpPatients",treated:"treated",procedures:"procedures",referred:"referred",discharged:"discharged",not_discharged:"notDischarged",lost_not_completed:"lostNotCompleted",reason:"reason"},
+    EYE_CARE:{recommendations:"recommendations",patients_received:"patientsReceived",new_patients:"newPatients",followup:"followUpPatients",examined:"examined",treated:"treated",referred:"referred",discharged:"discharged",not_discharged:"notDischarged",lost_not_completed:"lostNotCompleted",reason:"reason",challenges:"challenges"},
+    GBV:{clients_received:"clientsReceived",new_gbv:"newCases",followup:"followUp",medically_managed:"medicallyManaged",referred:"referred",psychosocial:"psychosocial",linked_services:"linkedServices",discharged:"discharged",not_completed:"notCompleted",reason:"reason"},
+    INPATIENT:{challenges:"challenges",recommendations:"recommendations",admitted:"patientsAdmitted",currently_admitted:"currentlyAdmitted",discharged:"discharged",referred:"referred",transferred:"transferred",deaths:"deaths",not_discharged:"notDischarged",lost_not_completed:"lostNotCompleted",reason:"mainReason"},
+    OTHER:{service_description:"serviceDescription",patients_received:"clientsReceived",served:"served",referred:"referred",not_completed:"notCompleted",reason:"reason",challenges:"challenges",recommendations:"recommendations"}
+  };
+
+  const serviceKey = report.serviceKey;
+  const data = report.serviceData || {};
+  const payload = {
+    reportType: REPORT_TYPES[serviceKey] || serviceKey,
+    employeeName: report.reporterName || "",
+    email: report.reporterEmail || "",
+    phone: report.reporterPhone || "",
+    date: report.date || "",
+    shift: report.shift || "",
+    service: report.service || ""
+  };
+
+  const mapping = FIELD_MAP[serviceKey] || {};
+  Object.keys(mapping).forEach(key => {
+    payload[mapping[key]] = data[key] ?? "";
+  });
 
   try{
+    await fetch(API_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)
+    });
 
-    const response =
-      await fetch(
-        API_URL,
-        {
-
-          method:"POST",
-
-          mode:"no-cors",
-
-          headers:{
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body:
-            JSON.stringify({
-              action:"saveReport",
-              report:report
-            })
-
-        }
-      );
-
-
-    document.getElementById(
-      "sheetStatusDot"
-    )
-    ?.classList.remove(
-      "disconnected"
-    );
-
-
-    document.getElementById(
-      "sheetStatusDot"
-    )
-    ?.classList.add(
-      "connected"
-    );
-
-
-    const sheetText = document.getElementById("sheetStatusText");
-    if(sheetText) sheetText.textContent = "Google Sheet: Connected";
-
-
+    document.getElementById("sheetStatusDot")?.classList.remove("disconnected");
+    document.getElementById("sheetStatusDot")?.classList.add("connected");
+    const sheetText=document.getElementById("sheetStatusText");
+    if(sheetText) sheetText.textContent="Google Sheet: Connected";
     return true;
-
-
   }catch(error){
-
-    console.error(
-      error
-    );
-
+    console.error("Google Sheet submission error:",error);
+    document.getElementById("sheetStatusDot")?.classList.add("disconnected");
     return false;
-
   }
-
 }
 
 
