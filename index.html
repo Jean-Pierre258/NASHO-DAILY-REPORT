@@ -4436,7 +4436,7 @@
             </h3>
 
             <p class="section-hint">
-              Andika email wakoresheje igihe watangaga report.
+              Andika email yakoreshejwe muri report. Uwufite iyo email ashobora kureba report zose zifitanye isano na yo.
             </p>
 
           </div>
@@ -4617,7 +4617,7 @@
             </h3>
 
             <p class="section-hint">
-              Raporo zihuye na email watanze.
+              Raporo zose zifitanye isano na email yakoreshejwe.
             </p>
 
           </div>
@@ -6512,6 +6512,11 @@ async function submitToGoogleSheet(
   Object.keys(mapping).forEach(key => {
     payload[mapping[key]] = data[key] ?? "";
   });
+
+  // Send the COMPLETE service data as JSON.
+  // Google Apps Script uses this to save every submitted field
+  // and to include the same report details in notification emails.
+  payload.serviceData = JSON.stringify(data);
 
   try{
     // IMPORTANT: use URL-encoded form data so Google Apps Script
