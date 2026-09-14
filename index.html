@@ -86,32 +86,7 @@
       display:none !important;
     }
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
 
-fetch(SCRIPT_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "text/plain;charset=utf-8"
-  },
-  body: JSON.stringify(data)
-})
-.then(response => response.json())
-.then(result => {
-  console.log(result);
-
-  if (result.status === "SUCCESS") {
-    alert("Report submitted successfully.");
-  } else {
-    alert("Error: " + result.message);
-  }
-})
-.catch(error => {
-  console.error(error);
-  alert("Submission failed.");
-});
-
-
-    
     /* =====================================================
        VARIABLES
     ====================================================== */
@@ -5170,9 +5145,8 @@ fetch(SCRIPT_URL, {
  * icyo gihe ibikwa muri localStorage.
  */
 
-let API_URL =
-  localStorage.getItem("nasho_api_url") ||
-  "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7j8JAZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71GgWm4-ycJYg8AmXQ/exec";
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
 
 // Report waiting for final confirmation from the review window
 let pendingReport = null;
@@ -9395,32 +9369,52 @@ async function confirmSubmitReport(){
     if(window.lucide) lucide.createIcons();
   }
 
-  reports.push(report);
-  saveReports();
-  rememberEmail(report.reporterEmail);
-
+  // Send to Google Apps Script first.
+  // Save to local history only after the request is dispatched.
   let synced = false;
 
-  if(API_URL){
-    synced = await submitToGoogleSheet(report);
+  try{
+    if(API_URL){
+      synced = await submitToGoogleSheet(report);
+    }
+
+    if(!synced){
+      throw new Error("Google Sheet request failed");
+    }
+
+    reports.push(report);
+    saveReports();
+    rememberEmail(report.reporterEmail);
+
+    showToast(
+      "Raporo yoherejwe kuri Google Sheet. Email notifications zoherejwe na server.",
+      "success"
+    );
+
+    updateDashboard();
+    renderHistoryTable(reports);
+
+    pendingReport = null;
+    clearFormAfterSubmit();
+    openReportViewModal(report, false);
+
+  }catch(error){
+
+    console.error("Final report submission error:", error);
+
+    showToast(
+      "Raporo ntiyoherejwe. Ongera ugerageze.",
+      "error"
+    );
+
+    if(button){
+      button.disabled = false;
+      button.innerHTML = `<i data-lucide="send"></i> Submit Report`;
+      if(window.lucide) lucide.createIcons();
+    }
   }
 
-  showToast(
-    synced
-      ? "Raporo yatanzwe kandi yabitswe muri Google Sheet."
-      : "Raporo yatanzwe kandi yabitswe muri system.",
-    "success"
-  );
-
-  updateDashboard();
-  renderHistoryTable(reports);
-
-  pendingReport = null;
-  clearFormAfterSubmit();
-  openReportViewModal(report, false);
-
 }
-
 
 /* =====================================================
    BACK TO CHANGE
