@@ -1,6 +1,107 @@
 <!DOCTYPE html>
 <html lang="rw">
 
+
+<script>
+
+const NASHO_API_URL =
+"https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
+
+
+async function loadAllReports() {
+
+  try {
+
+    const response = await fetch(
+      NASHO_API_URL + "?action=allReports"
+    );
+
+    const data = await response.json();
+
+    console.log("REPORTS:", data);
+
+    if (data.success) {
+
+      displayReports(data.reports);
+
+    } else {
+
+      console.error(data.message);
+
+    }
+
+  } catch (error) {
+
+    console.error("FAILED TO LOAD REPORTS:", error);
+
+  }
+}
+
+
+function displayReports(reports) {
+
+  const container =
+    document.getElementById("reportsContainer");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!reports || reports.length === 0) {
+
+    container.innerHTML =
+      "<p>No reports found.</p>";
+
+    return;
+  }
+
+  reports.forEach(function(report) {
+
+    const box = document.createElement("div");
+
+    box.style.border = "1px solid #ddd";
+    box.style.padding = "15px";
+    box.style.marginBottom = "10px";
+    box.style.borderRadius = "8px";
+    box.style.background = "#fff";
+
+    let html = "";
+
+    Object.keys(report).forEach(function(key) {
+
+      if (key.startsWith("_")) return;
+
+      html +=
+        "<div><strong>" +
+        escapeHtml(key) +
+        ":</strong> " +
+        escapeHtml(String(report[key] ?? "")) +
+        "</div>";
+
+    });
+
+    box.innerHTML = html;
+
+    container.appendChild(box);
+
+  });
+}
+
+
+function escapeHtml(value) {
+
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+</script>
+
+  
+
 <head>
 
   <meta charset="UTF-8">
