@@ -10272,8 +10272,14 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
    ========================================================= */
 
 (function(){
-  const NASHO_REMOTE_VERSION = "2026.09.15-NO-EXPIRING-ADMIN";
+  const NASHO_REMOTE_VERSION = "2026.09.15-LOGIN-SHEET-AUTH";
 
+  /*
+   * Credentials are NOT defined in this HTML.
+   * They come from the Dashboard Login form and are kept only
+   * for the current browser session so the server can re-check
+   * access for dashboard requests.
+   */
   function getAdminCredentials(){
     return {
       username: sessionStorage.getItem("nasho_dashboard_username") || "",
@@ -10505,7 +10511,7 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
     }catch(e){
       console.error("Admin login:",e);
       if(error){
-        error.textContent=e.message || "Login failed.";
+        error.textContent=e.message || "Login failed. Check the Login sheet and Apps Script deployment.";
         error.classList.remove("hidden");
       }
     }finally{
