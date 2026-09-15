@@ -4467,6 +4467,23 @@
           </div>
 
 
+          <div class="form-group">
+
+            <label for="historyService">Service</label>
+
+            <div class="input-with-icon">
+
+              <i data-lucide="layers-3"></i>
+
+              <select id="historyService">
+                <option value="ALL">All Services</option>
+              </select>
+
+            </div>
+
+          </div>
+
+
           <button
             class="btn-primary history-search-btn"
             onclick="loadMyHistory()"
@@ -10768,8 +10785,32 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
   /* ---------------------------------------------------------
      MY HISTORY: SERVER ONLY, ANY BROWSER
      --------------------------------------------------------- */
+  function populateMyHistoryServiceFilter_(){
+    const select=document.getElementById("historyService");
+    if(!select || typeof SERVICES !== "object") return;
+
+    const current=select.value || "ALL";
+    select.innerHTML='<option value="ALL">All Services</option>';
+
+    Object.entries(SERVICES).forEach(([key,service])=>{
+      const option=document.createElement("option");
+      option.value=key;
+      option.textContent=service.name || service.title || key;
+      select.appendChild(option);
+    });
+
+    if([...select.options].some(o=>o.value===current)){
+      select.value=current;
+    }else{
+      select.value="ALL";
+    }
+
+    if(window.lucide) lucide.createIcons();
+  }
+
   window.loadMyHistory=async function(){
     const email=document.getElementById("historyEmail")?.value.trim().toLowerCase() || "";
+    const service=document.getElementById("historyService")?.value || "ALL";
 
     if(!email){
       showHistoryMessage("Andika email yawe.","error");
@@ -10783,10 +10824,13 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
 
     rememberEmail(email);
     setHistoryLoading(true);
-    showHistoryMessage("Turimo gushaka raporo zawe muri Google Sheet...","info");
+    showHistoryMessage("Turimo gushaka raporo muri Google Sheet kuri email na service wahisemo...","info");
 
     try{
-      const response=await remoteGet("myHistory",{email});
+      // IMPORTANT: the Google Sheet is the source of truth.
+      // The selected service is sent to Apps Script so only that service
+      // sheet is queried (or all service sheets when ALL is selected).
+      const response=await remoteGet("myHistory",{email:email,service:service});
 
       if(!response || response.success!==true){
         throw new Error(response?.message || "History request failed.");
@@ -10795,6 +10839,18 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
       myHistoryReports=(response.reports||[]).map(normalizeReportForClient);
       displayMyHistoryRemote(myHistoryReports);
       setHistoryLoading(false);
+
+      if(myHistoryReports.length){
+        showHistoryMessage(
+          `${myHistoryReports.length} report(s) found for ${email} — ${service === "ALL" ? "All Services" : (SERVICES[service]?.name || service)}.`,
+          "success"
+        );
+      }else{
+        showHistoryMessage(
+          `Nta report yabonetse kuri ${email} muri ${service === "ALL" ? "All Services" : (SERVICES[service]?.name || service)}.`,
+          "info"
+        );
+      }
     }catch(e){
       console.error("My history:",e);
       setHistoryLoading(false);
@@ -10805,6 +10861,9 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
       displayMyHistoryRemote([]);
     }
   };
+
+  document.addEventListener("DOMContentLoaded",populateMyHistoryServiceFilter_);
+  setTimeout(populateMyHistoryServiceFilter_,0);
 
   function displayMyHistoryRemote(list){
     const results=document.getElementById("myHistoryResults");
