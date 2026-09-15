@@ -10303,51 +10303,109 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
     sessionStorage.removeItem("nasho_dashboard_role");
   }
 
-  function jsonp(url, callbackName){
-    return new Promise((resolve,reject)=>{
-      const script=document.createElement("script");
-      const unique=callbackName+"_"+Date.now()+"_"+Math.floor(Math.random()*10000);
-      let finished=false;
+  /* =========================================================
+     GOOGLE SHEETS READ BRIDGE
+     Vercel -> hidden Apps Script iframe -> google.script.run
+     This replaces JSONP for all READ operations.
+     ========================================================= */
+  const BRIDGE_TIMEOUT_MS = 30000;
+  let bridgeFrame = null;
+  let bridgeReady = false;
+  let bridgeReadyPromise = null;
+  const bridgeRequests = new Map();
+
+  function getBridgeOrigin_(){
+    try{return new URL(API_URL).origin;}catch(e){return "";}
+  }
+
+  function createBridge_(){
+    if(bridgeReadyPromise) return bridgeReadyPromise;
+
+    bridgeReadyPromise = new Promise((resolve,reject)=>{
+      const iframe=document.createElement("iframe");
+      iframe.id="nashoGoogleSheetsBridge";
+      iframe.title="NASHO Google Sheets Bridge";
+      iframe.setAttribute("aria-hidden","true");
+      iframe.style.cssText="position:fixed;width:1px;height:1px;left:-10000px;top:-10000px;border:0;opacity:0;pointer-events:none;";
+      bridgeFrame=iframe;
 
       const timer=setTimeout(()=>{
-        if(finished)return;
-        finished=true;
-        script.remove();
-        try{delete window[unique];}catch(e){}
-        reject(new Error("Server request timeout."));
-      },20000);
+        if(!bridgeReady){
+          bridgeReadyPromise=null;
+          reject(new Error("Google Sheets bridge did not start. Re-deploy Code.gs as Web app: Execute as Me + Anyone."));
+        }
+      },BRIDGE_TIMEOUT_MS);
 
-      window[unique]=(data)=>{
-        if(finished)return;
-        finished=true;
+      iframe.onload=()=>{};
+      iframe.onerror=()=>{
         clearTimeout(timer);
-        script.remove();
-        try{delete window[unique];}catch(e){}
-        resolve(data);
+        bridgeReadyPromise=null;
+        reject(new Error("Google Apps Script bridge could not be loaded."));
       };
 
-      script.onerror=()=>{
-        if(finished)return;
-        finished=true;
+      document.body.appendChild(iframe);
+      iframe.src=API_URL+"?action=bridge&_="+Date.now();
+
+      const originalResolve=resolve;
+      window.__nashoResolveBridge=()=>{
         clearTimeout(timer);
-        script.remove();
-        try{delete window[unique];}catch(e){}
-        reject(new Error("Google Apps Script GET request failed. Re-deploy the latest Code.gs as Web app: Execute as Me + Anyone. If the URL opens directly, wait and try again."));
+        bridgeReady=true;
+        originalResolve(iframe);
       };
+    });
 
-      script.src=url+(url.includes("?")?"&":"?")+
-        "callback="+encodeURIComponent(unique)+
-        "&_="+Date.now();
+    return bridgeReadyPromise;
+  }
 
-      document.body.appendChild(script);
+  window.addEventListener("message",function(event){
+    const data=event.data || {};
+    if(data.source!=="NASHO_DAILY_REPORT_BRIDGE")return;
+
+    if(data.type==="READY"){
+      bridgeReady=true;
+      if(window.__nashoResolveBridge){
+        const fn=window.__nashoResolveBridge;
+        window.__nashoResolveBridge=null;
+        fn();
+      }
+      return;
+    }
+
+    const packet=data.payload || {};
+    const pending=bridgeRequests.get(packet.requestId);
+    if(!pending)return;
+
+    bridgeRequests.delete(packet.requestId);
+    clearTimeout(pending.timer);
+
+    if(data.type==="RESULT") pending.resolve(packet.result);
+    else pending.reject(new Error(packet.message || "Google Sheets bridge request failed."));
+  });
+
+  async function bridgeGet_(action,params={}){
+    const iframe=await createBridge_();
+    if(!iframe || !iframe.contentWindow) throw new Error("Google Sheets bridge is unavailable.");
+
+    return new Promise((resolve,reject)=>{
+      const requestId="req_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+      const timer=setTimeout(()=>{
+        bridgeRequests.delete(requestId);
+        reject(new Error("Google Sheets request timed out."));
+      },BRIDGE_TIMEOUT_MS);
+
+      bridgeRequests.set(requestId,{resolve,reject,timer});
+
+      iframe.contentWindow.postMessage({
+        source:"NASHO_DAILY_REPORT",
+        requestId:requestId,
+        action:action,
+        params:params || {}
+      },"*");
     });
   }
 
   async function remoteGet(action, params={}){
-    const q=new URLSearchParams();
-    q.set("action",action);
-    Object.keys(params).forEach(k=>q.set(k,String(params[k] ?? "")));
-    return jsonp(API_URL+"?"+q.toString(),"nashoRemote");
+    return bridgeGet_(action,params);
   }
 
   async function remoteAdminPost(action,payload={}){
