@@ -7928,7 +7928,10 @@ function switchTab(
    DASHBOARD LOGIN / ADMIN ACCESS
 ===================================================== */
 
-const ADMIN_ACCOUNTS = []; /* Authentication is handled by Google Apps Script server. */
+const ADMIN_ACCOUNTS = [
+  { username:"jeanpierre", password:"JP2026@NASHO", fullName:"Jean Pierre Nsabimana", role:"admin" },
+  { username:"japhet", password:"JAP2026@NASHO", fullName:"Japhet Tuyishime", role:"admin" }
+];
 
 let DASHBOARD_USERNAME = "";
 let DASHBOARD_FULL_NAME = "";
@@ -10461,12 +10464,16 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
   }
 
   /* ---------------------------------------------------------
-     SERVER-SIDE ADMIN LOGIN
+     HTML-ONLY ADMIN LOGIN
+     Credentials are checked locally in this page.
+     The password is also kept in sessionStorage only so that
+     protected server-side admin actions can still be validated.
      --------------------------------------------------------- */
-  window.loginToDashboard=async function(){
+  window.loginToDashboard=function(){
     const username=document.getElementById("dashboardUsername")?.value.trim() || "";
     const password=document.getElementById("dashboardPassword")?.value || "";
     const error=document.getElementById("dashboardLoginError");
+    const button=document.getElementById("dashboardLoginButton");
 
     if(!username || !password){
       if(error){
@@ -10476,47 +10483,52 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
       return;
     }
 
-    const button=document.getElementById("dashboardLoginButton");
-    if(button)button.disabled=true;
+    const account=ADMIN_ACCOUNTS.find(function(user){
+      return user.username===username && user.password===password;
+    });
 
-    try{
-      const result=await remoteGet("adminLogin",{username,password});
-
-      if(!result || result.success!==true){
-        throw new Error(result?.message || "Login failed.");
-      }
-
-      sessionStorage.setItem("nasho_dashboard_auth","1");
-      sessionStorage.setItem("nasho_dashboard_password",password);
-      sessionStorage.setItem("nasho_dashboard_username",result.username||username);
-      sessionStorage.setItem("nasho_dashboard_full_name",result.fullName||"");
-      sessionStorage.setItem("nasho_dashboard_role",result.role||"admin");
-
-      DASHBOARD_USERNAME=result.username||username;
-      DASHBOARD_FULL_NAME=result.fullName||"";
-      DASHBOARD_ROLE=result.role||"admin";
-
-      closeDashboardLogin();
-
-      document.querySelectorAll(".tab-pane").forEach(s=>s.classList.remove("active"));
-      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-      document.getElementById("sectionDashboard")?.classList.add("active");
-      document.getElementById("tabBtnDashboard")?.classList.add("active");
-
-      await syncAllReportsFromServer(false);
-      updateDashboardCardsOnly();
-      initAdminTools();
-
-      showToast("Dashboard yafunguwe neza. Amakuru ari muri Google Sheet amaze kuvugururwa.","success");
-    }catch(e){
-      console.error("Admin login:",e);
+    if(!account){
       if(error){
-        error.textContent=e.message || "Login failed. Check the Login sheet and Apps Script deployment.";
+        error.textContent="Username cyangwa password ntabwo ari byo.";
         error.classList.remove("hidden");
       }
-    }finally{
-      if(button)button.disabled=false;
+      return;
     }
+
+    if(button)button.disabled=true;
+
+    DASHBOARD_USERNAME=account.username;
+    DASHBOARD_FULL_NAME=account.fullName;
+    DASHBOARD_ROLE=account.role;
+
+    sessionStorage.setItem("nasho_dashboard_auth","1");
+    sessionStorage.setItem("nasho_dashboard_username",account.username);
+    sessionStorage.setItem("nasho_dashboard_password",account.password);
+    sessionStorage.setItem("nasho_dashboard_full_name",account.fullName);
+    sessionStorage.setItem("nasho_dashboard_role",account.role);
+
+    if(error)error.classList.add("hidden");
+    closeDashboardLogin();
+
+    document.querySelectorAll(".tab-pane").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.getElementById("sectionDashboard")?.classList.add("active");
+    document.getElementById("tabBtnDashboard")?.classList.add("active");
+
+    updateDashboardCardsOnly();
+    initAdminTools();
+
+    /* Refresh server data in the background. The login itself never
+       contacts Apps Script, so Network/server error cannot block login. */
+    syncAllReportsFromServer(false).then(function(){
+      updateDashboardCardsOnly();
+      initAdminTools();
+    }).catch(function(e){
+      console.warn("Background dashboard sync:",e);
+    });
+
+    if(button)button.disabled=false;
+    showToast("Dashboard yafunguwe neza.","success");
   };
 
   window.logoutDashboard=function(){
