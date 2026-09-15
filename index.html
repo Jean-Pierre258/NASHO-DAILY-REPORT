@@ -1,107 +1,6 @@
 <!DOCTYPE html>
 <html lang="rw">
 
-
-<script>
-
-const NASHO_API_URL =
-"https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
-
-
-async function loadAllReports() {
-
-  try {
-
-    const response = await fetch(
-      NASHO_API_URL + "?action=allReports"
-    );
-
-    const data = await response.json();
-
-    console.log("REPORTS:", data);
-
-    if (data.success) {
-
-      displayReports(data.reports);
-
-    } else {
-
-      console.error(data.message);
-
-    }
-
-  } catch (error) {
-
-    console.error("FAILED TO LOAD REPORTS:", error);
-
-  }
-}
-
-
-function displayReports(reports) {
-
-  const container =
-    document.getElementById("reportsContainer");
-
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  if (!reports || reports.length === 0) {
-
-    container.innerHTML =
-      "<p>No reports found.</p>";
-
-    return;
-  }
-
-  reports.forEach(function(report) {
-
-    const box = document.createElement("div");
-
-    box.style.border = "1px solid #ddd";
-    box.style.padding = "15px";
-    box.style.marginBottom = "10px";
-    box.style.borderRadius = "8px";
-    box.style.background = "#fff";
-
-    let html = "";
-
-    Object.keys(report).forEach(function(key) {
-
-      if (key.startsWith("_")) return;
-
-      html +=
-        "<div><strong>" +
-        escapeHtml(key) +
-        ":</strong> " +
-        escapeHtml(String(report[key] ?? "")) +
-        "</div>";
-
-    });
-
-    box.innerHTML = html;
-
-    container.appendChild(box);
-
-  });
-}
-
-
-function escapeHtml(value) {
-
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-</script>
-
-  
-
 <head>
 
   <meta charset="UTF-8">
@@ -6601,6 +6500,7 @@ async function submitToGoogleSheet(
   const data = report.serviceData || {};
   const payload = {
     reportType: REPORT_TYPES[serviceKey] || serviceKey,
+    reportId: report.id || "",
     employeeName: report.reporterName || "",
     email: report.reporterEmail || "",
     phone: report.reporterPhone || "",
@@ -8028,20 +7928,7 @@ function switchTab(
    DASHBOARD LOGIN / ADMIN ACCESS
 ===================================================== */
 
-const ADMIN_ACCOUNTS = [
-  {
-    fullName: "Jean Pierre Nsabimana",
-    username: "jeanpierre",
-    password: "JP2026@NASHO",
-    role: "admin"
-  },
-  {
-    fullName: "Japhet Tuyishime",
-    username: "japhet",
-    password: "JAP2026@NASHO",
-    role: "admin"
-  }
-];
+const ADMIN_ACCOUNTS = []; /* Authentication is handled by Google Apps Script server. */
 
 let DASHBOARD_USERNAME = "";
 let DASHBOARD_FULL_NAME = "";
@@ -10374,6 +10261,679 @@ function showHistoryMessage(
 
 // Initialize saved language on page load
 document.addEventListener('DOMContentLoaded', initializeLanguage);
+</script>
+
+
+<script>
+/* =========================================================
+   NASHO REMOTE DATABASE SYNC + SERVER-SIDE ADMIN
+   This block intentionally lives after the original app code
+   so it safely overrides the localStorage-only functions.
+   ========================================================= */
+
+(function(){
+  const NASHO_REMOTE_VERSION = "2026.09.15-REMOTE-SYNC";
+
+  function getAdminToken(){
+    return sessionStorage.getItem("nasho_admin_token") || "";
+  }
+
+  function clearAdminToken(){
+    sessionStorage.removeItem("nasho_admin_token");
+    sessionStorage.removeItem("nasho_dashboard_auth");
+    sessionStorage.removeItem("nasho_dashboard_username");
+    sessionStorage.removeItem("nasho_dashboard_full_name");
+    sessionStorage.removeItem("nasho_dashboard_role");
+  }
+
+  function jsonp(url, callbackName){
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement("script");
+      const unique=callbackName+"_"+Date.now()+"_"+Math.floor(Math.random()*10000);
+      let finished=false;
+
+      const timer=setTimeout(()=>{
+        if(finished)return;
+        finished=true;
+        script.remove();
+        try{delete window[unique];}catch(e){}
+        reject(new Error("Server request timeout."));
+      },20000);
+
+      window[unique]=(data)=>{
+        if(finished)return;
+        finished=true;
+        clearTimeout(timer);
+        script.remove();
+        try{delete window[unique];}catch(e){}
+        resolve(data);
+      };
+
+      script.onerror=()=>{
+        if(finished)return;
+        finished=true;
+        clearTimeout(timer);
+        script.remove();
+        try{delete window[unique];}catch(e){}
+        reject(new Error("Network/server error."));
+      };
+
+      script.src=url+(url.includes("?")?"&":"?")+
+        "callback="+encodeURIComponent(unique)+
+        "&_="+Date.now();
+
+      document.body.appendChild(script);
+    });
+  }
+
+  async function remoteGet(action, params={}){
+    const q=new URLSearchParams();
+    q.set("action",action);
+    Object.keys(params).forEach(k=>q.set(k,String(params[k] ?? "")));
+    return jsonp(API_URL+"?"+q.toString(),"nashoRemote");
+  }
+
+  async function remoteAdminPost(action,payload={}){
+    const body=new URLSearchParams();
+    body.set("action",action);
+    body.set("token",getAdminToken());
+
+    Object.keys(payload).forEach(key=>{
+      const value=payload[key];
+      body.set(key,typeof value==="object"?JSON.stringify(value):String(value ?? ""));
+    });
+
+    /* no-cors is deliberate: Google Apps Script accepts the write.
+       The result is verified by a fresh JSONP GET afterwards. */
+    await fetch(API_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{
+        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body:body.toString()
+    });
+
+    return true;
+  }
+
+  function normalizeReportForClient(report){
+    if(!report)return null;
+
+    /* Server already returns this canonical structure. */
+    if(report.reporterEmail || report.serviceData || report.serviceKey){
+      return {
+        ...report,
+        id:report.id || report.reportId || "",
+        reporterName:report.reporterName || report["Employee Name"] || "",
+        reporterEmail:String(report.reporterEmail || report.Email || "").trim().toLowerCase(),
+        reporterPhone:report.reporterPhone || report.Phone || "",
+        date:report.date || report.Date || "",
+        shift:report.shift || report.Shift || "",
+        service:report.service || report.Service || "Other",
+        submittedAt:report.submittedAt || report.Timestamp || "",
+        status:report.status || report.Status || "Submitted",
+        serviceData:report.serviceData || {},
+        adminReview:report.adminReview || {
+          review:report["Admin Review"] || "",
+          advice:report["Admin Advice"] || "",
+          reviewedBy:report["Reviewed By"] || "",
+          reviewedAt:report["Reviewed At"] || ""
+        }
+      };
+    }
+
+    return report;
+  }
+
+  async function syncAllReportsFromServer(showToastMessage=false){
+    const token=getAdminToken();
+    if(!token){
+      if(showToastMessage)showToast("Banza winjire muri Admin Dashboard.","error");
+      return false;
+    }
+
+    try{
+      const response=await remoteGet("allReports",{token});
+
+      if(!response || response.success!==true){
+        if(response && /expired|session/i.test(response.message||"")){
+          clearAdminToken();
+        }
+        throw new Error(response?.message || "Could not load reports.");
+      }
+
+      reports=(response.reports||[]).map(normalizeReportForClient);
+      saveReports();
+      updateDashboardCardsOnly();
+      renderHistoryTable(reports);
+      populateAdminReportSelect();
+      populateAdminReportServiceFilter();
+      filterAdminReports();
+      renderRecycleBin();
+
+      if(showToastMessage){
+        showToast(`Server: ${reports.length} report(s) loaded.`, "success");
+      }
+      return true;
+    }catch(error){
+      console.error("Remote reports sync:",error);
+      if(showToastMessage)showToast("Amakuru yo muri Google Sheet ntiyabashije kuboneka: "+error.message,"error");
+      return false;
+    }
+  }
+
+  function updateDashboardCardsOnly(){
+    const total=reports.length;
+    const today=new Date().toISOString().split("T")[0];
+    const todayCount=reports.filter(r=>String(r.date||"").substring(0,10)===today).length;
+    const workers=new Set(reports.map(r=>String(r.reporterEmail||"").toLowerCase()).filter(Boolean)).size;
+    const services=new Set(reports.map(r=>r.service).filter(Boolean)).size;
+
+    setText("kpiTotalReports",total);
+    setText("kpiTodayCount",`${todayCount} z'uyu munsi`);
+    setText("kpiTotalWorkers",workers);
+    setText("kpiTotalIssues",services);
+    setText("kpiTotalFuel",todayCount);
+
+    try{
+      renderServiceChart();
+      renderDashboardFeed();
+    }catch(e){
+      console.warn(e);
+    }
+  }
+
+  /* ---------------------------------------------------------
+     SERVER-SIDE ADMIN LOGIN
+     --------------------------------------------------------- */
+  window.loginToDashboard=async function(){
+    const username=document.getElementById("dashboardUsername")?.value.trim() || "";
+    const password=document.getElementById("dashboardPassword")?.value || "";
+    const error=document.getElementById("dashboardLoginError");
+
+    if(!username || !password){
+      if(error){
+        error.textContent="Shyiramo username na password.";
+        error.classList.remove("hidden");
+      }
+      return;
+    }
+
+    const button=document.getElementById("dashboardLoginButton");
+    if(button)button.disabled=true;
+
+    try{
+      const result=await remoteGet("adminLogin",{username,password});
+
+      if(!result || result.success!==true || !result.token){
+        throw new Error(result?.message || "Login failed.");
+      }
+
+      sessionStorage.setItem("nasho_admin_token",result.token);
+      sessionStorage.setItem("nasho_dashboard_auth","1");
+      sessionStorage.setItem("nasho_dashboard_username",result.username||username);
+      sessionStorage.setItem("nasho_dashboard_full_name",result.fullName||"");
+      sessionStorage.setItem("nasho_dashboard_role",result.role||"admin");
+
+      DASHBOARD_USERNAME=result.username||username;
+      DASHBOARD_FULL_NAME=result.fullName||"";
+      DASHBOARD_ROLE=result.role||"admin";
+
+      closeDashboardLogin();
+
+      document.querySelectorAll(".tab-pane").forEach(s=>s.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      document.getElementById("sectionDashboard")?.classList.add("active");
+      document.getElementById("tabBtnDashboard")?.classList.add("active");
+
+      await syncAllReportsFromServer(false);
+      updateDashboardCardsOnly();
+      initAdminTools();
+
+      showToast("Dashboard yafunguwe neza. Amakuru ari muri Google Sheet amaze kuvugururwa.","success");
+    }catch(e){
+      console.error("Admin login:",e);
+      if(error){
+        error.textContent=e.message || "Login failed.";
+        error.classList.remove("hidden");
+      }
+    }finally{
+      if(button)button.disabled=false;
+    }
+  };
+
+  window.logoutDashboard=function(){
+    clearAdminToken();
+    reports=[];
+    saveReports();
+    document.querySelectorAll(".tab-pane").forEach(section=>section.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(btn=>btn.classList.remove("active"));
+    document.getElementById("sectionForm")?.classList.add("active");
+    document.getElementById("tabBtnForm")?.classList.add("active");
+    showToast("Wasohotse muri Dashboard.","info");
+  };
+
+  /* ---------------------------------------------------------
+     DASHBOARD REFRESH = REAL SERVER SYNC
+     --------------------------------------------------------- */
+  window.updateDashboard=async function(){
+    if(getAdminToken()){
+      await syncAllReportsFromServer(false);
+    }
+    updateDashboardCardsOnly();
+    if(getAdminToken()){
+      initAdminTools();
+    }
+  };
+
+  window.refreshDashboard=async function(){
+    const ok=await syncAllReportsFromServer(true);
+    if(ok){
+      updateDashboardCardsOnly();
+      initAdminTools();
+    }
+  };
+
+  /* ---------------------------------------------------------
+     ADMIN REVIEW: SAVE TO GOOGLE SHEET, THEN VERIFY
+     --------------------------------------------------------- */
+  window.saveAdminReview=async function(showMessage=true){
+    const id=document.getElementById("adminReviewReport")?.value || "";
+    const report=reports.find(r=>String(r.id)===String(id));
+
+    if(!report){
+      showToast("Banza uhitemo report.","error");
+      return false;
+    }
+
+    const review=document.getElementById("adminReviewText")?.value.trim() || "";
+    const advice=document.getElementById("adminReviewAdvice")?.value.trim() || "";
+
+    if(!review && !advice){
+      showToast("Andika review cyangwa inama mbere yo kubika.","error");
+      return false;
+    }
+
+    try{
+      await remoteAdminPost("save_review",{
+        reportId:report.id,
+        review:review,
+        advice:advice
+      });
+
+      await wait(700);
+      const ok=await syncAllReportsFromServer(false);
+
+      if(showMessage){
+        showToast(
+          ok
+            ? "Review n'inama byabitswe muri Google Sheet."
+            : "Review yoherejwe; kanda Refresh kugira ngo uyibone.",
+          ok?"success":"info"
+        );
+      }
+      return true;
+    }catch(e){
+      console.error(e);
+      showToast("Review ntiyabitswe: "+e.message,"error");
+      return false;
+    }
+  };
+
+  window.shareSelectedReview=async function(){
+    const id=document.getElementById("adminReviewReport")?.value || "";
+    const report=reports.find(r=>String(r.id)===String(id));
+
+    if(!report){
+      showToast("Hitamo report mbere.","error");
+      return;
+    }
+
+    const review=document.getElementById("adminReviewText")?.value.trim() || "";
+    const advice=document.getElementById("adminReviewAdvice")?.value.trim() || "";
+
+    if(!review && !advice){
+      showToast("Andika review cyangwa inama mbere yo kohereza.","error");
+      return;
+    }
+
+    try{
+      await remoteAdminPost("share_report_review",{
+        reportId:report.id,
+        review:review,
+        advice:advice
+      });
+
+      await wait(900);
+      await syncAllReportsFromServer(false);
+      showToast("Review n'inama byoherejwe kuri email ya reporter kandi bibitswe kuri report.","success");
+    }catch(e){
+      console.error(e);
+      showToast("Kohereza review byanze: "+e.message,"error");
+    }
+  };
+
+  /* ---------------------------------------------------------
+     ADMIN REPORT VIEW: ALWAYS USE SERVER COPY
+     --------------------------------------------------------- */
+  window.viewAdminManagedReport=function(id){
+    const report=reports.find(r=>String(r.id)===String(id));
+    if(!report){
+      showToast("Report ntiyabonetse. Ongera Refresh Dashboard.","error");
+      return;
+    }
+    openReportViewModal(report,false);
+  };
+
+  const oldOpenReportViewModal=window.openReportViewModal;
+  window.openReportViewModal=function(report,reviewMode=false){
+    if(!report)return;
+    oldOpenReportViewModal(report,reviewMode);
+    injectRemoteReviewIntoView(report);
+  };
+
+  function injectRemoteReviewIntoView(report){
+    const content=document.getElementById("printableReportContent");
+    if(!content)return;
+
+    let box=document.getElementById("remoteAdminReviewBox");
+
+    if(!box){
+      box=document.createElement("div");
+      box.id="remoteAdminReviewBox";
+      box.style.cssText=
+        "margin-top:18px;padding:16px;border:1px solid #dbeafe;" +
+        "border-radius:14px;background:#f8fbff;";
+
+      content.appendChild(box);
+    }
+
+    const review=report.adminReview||{};
+    const hasReview=review.review || review.advice;
+
+    box.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;font-weight:800;color:#0f3b63;margin-bottom:10px">
+        <i data-lucide="message-square-more"></i>
+        Admin Feedback
+      </div>
+      <div style="margin-bottom:10px">
+        <strong>Review:</strong>
+        <div style="margin-top:5px;white-space:pre-wrap;color:#475569">
+          ${escapeHtml(review.review || "Nta review yatanzwe.")
+            .replace(/\n/g,"<br>")}
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <strong>Inama / Recommendations:</strong>
+        <div style="margin-top:5px;white-space:pre-wrap;color:#475569">
+          ${escapeHtml(review.advice || "Nta nama yatanzwe.")
+            .replace(/\n/g,"<br>")}
+        </div>
+      </div>
+      <div style="font-size:11px;color:#64748b">
+        ${hasReview ? "Reviewed by: "+escapeHtml(review.reviewedBy||"Admin")+" • "+escapeHtml(review.reviewedAt||"") : "Iyi report ntirarebwa na Admin."}
+      </div>
+    `;
+
+    if(window.lucide)lucide.createIcons();
+  }
+
+  /* ---------------------------------------------------------
+     MY HISTORY: SERVER ONLY, ANY BROWSER
+     --------------------------------------------------------- */
+  window.loadMyHistory=async function(){
+    const email=document.getElementById("historyEmail")?.value.trim().toLowerCase() || "";
+
+    if(!email){
+      showHistoryMessage("Andika email yawe.","error");
+      return;
+    }
+
+    if(!isValidEmail(email)){
+      showHistoryMessage("Email ntabwo isa n'iyemewe.","error");
+      return;
+    }
+
+    rememberEmail(email);
+    setHistoryLoading(true);
+    showHistoryMessage("Turimo gushaka raporo zawe muri Google Sheet...","info");
+
+    try{
+      const response=await remoteGet("myHistory",{email});
+
+      if(!response || response.success!==true){
+        throw new Error(response?.message || "History request failed.");
+      }
+
+      myHistoryReports=(response.reports||[]).map(normalizeReportForClient);
+      displayMyHistoryRemote(myHistoryReports);
+      setHistoryLoading(false);
+    }catch(e){
+      console.error("My history:",e);
+      setHistoryLoading(false);
+      showHistoryMessage(
+        "Raporo ntizabonetse kuri server: "+e.message,
+        "error"
+      );
+      displayMyHistoryRemote([]);
+    }
+  };
+
+  function displayMyHistoryRemote(list){
+    const results=document.getElementById("myHistoryResults");
+    const empty=document.getElementById("myHistoryEmpty");
+    const summary=document.getElementById("myHistorySummary");
+    const container=document.getElementById("myHistoryList");
+
+    if(!results || !empty || !summary || !container)return;
+
+    if(!list.length){
+      results.classList.add("hidden");
+      summary.classList.add("hidden");
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    empty.classList.add("hidden");
+    results.classList.remove("hidden");
+    summary.classList.remove("hidden");
+
+    const today=new Date().toISOString().split("T")[0];
+    const todayCount=list.filter(r=>String(r.date||"").substring(0,10)===today).length;
+
+    const sorted=[...list].sort(
+      (a,b)=>new Date(b.submittedAt||b.date||0)-new Date(a.submittedAt||a.date||0)
+    );
+
+    setText("myHistoryTotal",list.length);
+    setText("myHistoryToday",todayCount);
+    setText("myHistoryLastDate",sorted[0]?formatDate(sorted[0].date):"—");
+
+    container.innerHTML=sorted.map((report,index)=>{
+      const review=report.adminReview||{};
+      const hasFeedback=Boolean(review.review||review.advice);
+
+      return `
+        <div class="my-history-item">
+          <div class="history-item-icon">
+            <i data-lucide="file-text"></i>
+          </div>
+
+          <div class="history-item-main">
+            <div class="history-item-top">
+              <div>
+                <h4>${escapeHtml(report.service||"Daily Report")}</h4>
+                <div class="history-date">
+                  <i data-lucide="calendar"></i>
+                  ${escapeHtml(formatDate(report.date))}
+                </div>
+              </div>
+
+              <span class="history-status ${hasFeedback?"history-reviewed":"history-submitted"}">
+                ${hasFeedback?"Yasubiwemo na Admin":"Yatanzwe"}
+              </span>
+            </div>
+
+            <div class="history-item-meta">
+              <span><i data-lucide="user"></i>${escapeHtml(report.reporterName||"")}</span>
+              <span><i data-lucide="mail"></i>${escapeHtml(report.reporterEmail||"")}</span>
+              <span><i data-lucide="phone"></i>${escapeHtml(report.reporterPhone||"")}</span>
+              <span><i data-lucide="hash"></i>${escapeHtml(report.id||"")}</span>
+            </div>
+
+            ${hasFeedback ? `
+              <div class="remote-feedback-card">
+                <div class="remote-feedback-title">
+                  <i data-lucide="message-square-more"></i>
+                  Feedback ya Admin
+                </div>
+                ${review.review ? `
+                  <div class="remote-feedback-row">
+                    <strong>Review:</strong>
+                    <span>${escapeHtml(review.review).replace(/\n/g,"<br>")}</span>
+                  </div>`:""}
+                ${review.advice ? `
+                  <div class="remote-feedback-row">
+                    <strong>Inama:</strong>
+                    <span>${escapeHtml(review.advice).replace(/\n/g,"<br>")}</span>
+                  </div>`:""}
+                <div class="remote-feedback-meta">
+                  ${escapeHtml(review.reviewedBy||"Admin")}
+                  ${review.reviewedAt?" • "+escapeHtml(review.reviewedAt):""}
+                </div>
+              </div>
+            ` : `
+              <div class="remote-no-feedback">
+                <i data-lucide="clock-3"></i>
+                Nta feedback ya Admin iratangwa kuri iyi report.
+              </div>
+            `}
+
+            <div class="history-item-bottom">
+              <small>${escapeHtml(formatSubmittedAt(report.submittedAt))}</small>
+
+              <button
+                class="btn-primary-outline btn-sm"
+                onclick="openHistoryReport(${index})">
+                <i data-lucide="eye"></i>
+                Reba Raporo
+              </button>
+
+              <button
+                class="btn-primary-outline btn-sm"
+                onclick="printHistoryReport(${index})"
+                title="Print / PDF">
+                <i data-lucide="printer"></i>
+                Print / PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    window.currentMyHistorySorted=sorted;
+    if(window.lucide)lucide.createIcons();
+  }
+
+  function wait(ms){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+  }
+
+  /* ---------------------------------------------------------
+     AUTO-RESTORE ADMIN SESSION AFTER PAGE REFRESH
+     --------------------------------------------------------- */
+  document.addEventListener("DOMContentLoaded",async()=>{
+    const token=getAdminToken();
+    if(!token)return;
+
+    DASHBOARD_USERNAME=sessionStorage.getItem("nasho_dashboard_username")||"";
+    DASHBOARD_FULL_NAME=sessionStorage.getItem("nasho_dashboard_full_name")||"";
+    DASHBOARD_ROLE=sessionStorage.getItem("nasho_dashboard_role")||"admin";
+
+    const auth=sessionStorage.getItem("nasho_dashboard_auth");
+    if(auth==="1"){
+      try{
+        await syncAllReportsFromServer(false);
+      }catch(e){
+        console.warn("Admin session restore failed",e);
+      }
+    }
+  });
+
+  /* Small visual additions for remote feedback. */
+  const style=document.createElement("style");
+  style.textContent=`
+    .history-reviewed{
+      color:#1d4ed8 !important;
+      background:#dbeafe !important;
+    }
+    .history-submitted{
+      color:#15803d !important;
+      background:#dcfce7 !important;
+    }
+    .remote-feedback-card{
+      margin-top:13px;
+      padding:13px;
+      border:1px solid #bfdbfe;
+      background:#f8fbff;
+      border-radius:13px;
+    }
+    .remote-feedback-title{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-weight:800;
+      color:#1d4ed8;
+      font-size:12px;
+      margin-bottom:9px;
+    }
+    .remote-feedback-row{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      font-size:11px;
+      margin-top:8px;
+      color:#334155;
+    }
+    .remote-feedback-row span{
+      color:#475569;
+      white-space:normal;
+      word-break:break-word;
+    }
+    .remote-feedback-meta{
+      margin-top:10px;
+      padding-top:8px;
+      border-top:1px solid #e2e8f0;
+      color:#64748b;
+      font-size:10px;
+    }
+    .remote-no-feedback{
+      margin-top:11px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:9px 11px;
+      border-radius:10px;
+      background:#f8fafc;
+      color:#64748b;
+      font-size:10px;
+    }
+    @media print{
+      #remoteAdminReviewBox{
+        display:block !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  window.NASHO_REMOTE_SYNC={
+    version:NASHO_REMOTE_VERSION,
+    sync:syncAllReportsFromServer,
+    getToken:getAdminToken
+  };
+})();
 </script>
 
 </body>
