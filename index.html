@@ -10275,7 +10275,7 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
    ========================================================= */
 
 (function(){
-  const NASHO_REMOTE_VERSION = "2026.09.15-LOGIN-SHEET-AUTH";
+  const NASHO_REMOTE_VERSION = "2026.09.15-HTML-LOGIN-HISTORY-FIX";
 
   /*
    * Credentials are NOT defined in this HTML.
@@ -10332,7 +10332,7 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
         clearTimeout(timer);
         script.remove();
         try{delete window[unique];}catch(e){}
-        reject(new Error("Network/server error."));
+        reject(new Error("Google Apps Script GET request failed. Re-deploy the latest Code.gs as Web app: Execute as Me + Anyone. If the URL opens directly, wait and try again."));
       };
 
       script.src=url+(url.includes("?")?"&":"?")+
