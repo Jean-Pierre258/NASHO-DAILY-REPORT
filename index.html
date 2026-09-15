@@ -5146,7 +5146,7 @@
  */
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
+  "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71GgWm4-yjCwYg8AmXQ/exec";
 
 // Report waiting for final confirmation from the review window
 let pendingReport = null;
@@ -10272,14 +10272,22 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
    ========================================================= */
 
 (function(){
-  const NASHO_REMOTE_VERSION = "2026.09.15-REMOTE-SYNC";
+  const NASHO_REMOTE_VERSION = "2026.09.15-NO-EXPIRING-ADMIN";
 
-  function getAdminToken(){
-    return sessionStorage.getItem("nasho_admin_token") || "";
+  function getAdminCredentials(){
+    return {
+      username: sessionStorage.getItem("nasho_dashboard_username") || "",
+      password: sessionStorage.getItem("nasho_dashboard_password") || ""
+    };
+  }
+
+  function hasAdminSession(){
+    const c=getAdminCredentials();
+    return !!(c.username && c.password && sessionStorage.getItem("nasho_dashboard_auth")==="1");
   }
 
   function clearAdminToken(){
-    sessionStorage.removeItem("nasho_admin_token");
+    sessionStorage.removeItem("nasho_dashboard_password");
     sessionStorage.removeItem("nasho_dashboard_auth");
     sessionStorage.removeItem("nasho_dashboard_username");
     sessionStorage.removeItem("nasho_dashboard_full_name");
@@ -10336,7 +10344,9 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
   async function remoteAdminPost(action,payload={}){
     const body=new URLSearchParams();
     body.set("action",action);
-    body.set("token",getAdminToken());
+    const credentials=getAdminCredentials();
+    body.set("username",credentials.username);
+    body.set("password",credentials.password);
 
     Object.keys(payload).forEach(key=>{
       const value=payload[key];
@@ -10387,17 +10397,17 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
   }
 
   async function syncAllReportsFromServer(showToastMessage=false){
-    const token=getAdminToken();
-    if(!token){
+    const credentials=getAdminCredentials();
+    if(!hasAdminSession()){
       if(showToastMessage)showToast("Banza winjire muri Admin Dashboard.","error");
       return false;
     }
 
     try{
-      const response=await remoteGet("allReports",{token});
+      const response=await remoteGet("allReports",credentials);
 
       if(!response || response.success!==true){
-        if(response && /expired|session/i.test(response.message||"")){
+        if(response && /credential|login|admin/i.test(response.message||"")){
           clearAdminToken();
         }
         throw new Error(response?.message || "Could not load reports.");
@@ -10466,12 +10476,12 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
     try{
       const result=await remoteGet("adminLogin",{username,password});
 
-      if(!result || result.success!==true || !result.token){
+      if(!result || result.success!==true){
         throw new Error(result?.message || "Login failed.");
       }
 
-      sessionStorage.setItem("nasho_admin_token",result.token);
       sessionStorage.setItem("nasho_dashboard_auth","1");
+      sessionStorage.setItem("nasho_dashboard_password",password);
       sessionStorage.setItem("nasho_dashboard_username",result.username||username);
       sessionStorage.setItem("nasho_dashboard_full_name",result.fullName||"");
       sessionStorage.setItem("nasho_dashboard_role",result.role||"admin");
@@ -10518,11 +10528,11 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
      DASHBOARD REFRESH = REAL SERVER SYNC
      --------------------------------------------------------- */
   window.updateDashboard=async function(){
-    if(getAdminToken()){
+    if(hasAdminSession()){
       await syncAllReportsFromServer(false);
     }
     updateDashboardCardsOnly();
-    if(getAdminToken()){
+    if(hasAdminSession()){
       initAdminTools();
     }
   };
@@ -10845,8 +10855,7 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
      AUTO-RESTORE ADMIN SESSION AFTER PAGE REFRESH
      --------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded",async()=>{
-    const token=getAdminToken();
-    if(!token)return;
+    if(!hasAdminSession())return;
 
     DASHBOARD_USERNAME=sessionStorage.getItem("nasho_dashboard_username")||"";
     DASHBOARD_FULL_NAME=sessionStorage.getItem("nasho_dashboard_full_name")||"";
@@ -10931,7 +10940,7 @@ document.addEventListener('DOMContentLoaded', initializeLanguage);
   window.NASHO_REMOTE_SYNC={
     version:NASHO_REMOTE_VERSION,
     sync:syncAllReportsFromServer,
-    getToken:getAdminToken
+    getCredentials:getAdminCredentials
   };
 })();
 </script>
