@@ -247,6 +247,68 @@
       color: var(--primary);
     }
 
+
+    /* =====================================================
+       SMOOTH ICON BACKGROUNDS + ANIMATIONS
+    ====================================================== */
+    .card-icon-wrap, .service-card-icon {
+      transition: color .35s ease, background-color .35s ease, transform .35s ease, filter .35s ease, box-shadow .35s ease;
+    }
+    .card-icon-wrap {
+      box-shadow: 0 5px 14px rgba(15, 23, 42, .07);
+    }
+    .card-icon-wrap:hover, .service-card-icon:hover {
+      transform: translateY(-3px) scale(1.05);
+      filter: saturate(1.18);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .10);
+    }
+    .tab-btn i, .admin-subtab-btn i, .btn-primary i, .btn-secondary i, .btn-danger-outline i, .lang-btn i {
+      transition: color .35s ease, transform .35s ease, filter .35s ease;
+    }
+    .tab-btn:hover i, .admin-subtab-btn:hover i, button:hover > i {
+      transform: scale(1.08);
+      filter: saturate(1.2);
+    }
+    .logo-badge i { animation: iconPulse 3s ease-in-out infinite; }
+    @keyframes iconPulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    /* Every service icon receives its own soft background color.
+       The inline variables are assigned from renderServiceCards(). */
+    .emoji-service-icon {
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif !important;
+      font-size: 24px !important;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      color: initial !important;
+      text-shadow: none !important;
+    }
+
+    .service-card-icon {
+      background: var(--service-icon-bg, #f1f5f9);
+      color: var(--service-icon-color, #334155);
+      border: 1px solid var(--service-icon-border, rgba(15,23,42,.06));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+    }
+    .service-card.active .service-card-icon {
+      background: var(--service-icon-bg, #f1f5f9);
+      color: var(--service-icon-color, #334155);
+      border-color: var(--service-icon-border, rgba(15,23,42,.06));
+    }
+
+    /* Number fields: the reporter enters the exact number; no automatic 0 is inserted. */
+    #dynamicFieldsContainer input[type="number"] {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+    #dynamicFieldsContainer input[type="number"]::placeholder {
+      color: #94a3b8;
+    }
+
     /* =====================================================
        PRIMARY TABS BAR
     ====================================================== */
@@ -544,61 +606,79 @@
     ====================================================== */
     .service-selector {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: 12px;
     }
 
     .service-card {
       position: relative;
+      min-width: 0;
+      min-height: 128px;
       padding: 16px;
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
+      background: linear-gradient(145deg, #ffffff 0%, #fbfdfd 100%);
+      border: 1px solid #dfe7ef;
+      border-radius: 15px;
       cursor: pointer;
-      transition: all 0.22s ease;
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
       text-align: left;
+      overflow: hidden;
+    }
+
+    .service-card::after {
+      content: '';
+      position: absolute;
+      right: -24px;
+      bottom: -34px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, .012);
+      pointer-events: none;
     }
 
     .service-card:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
-      border-color: #86efac;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, .07);
+      border-color: #cbd5e1;
     }
 
     .service-card.active {
-      background: linear-gradient(145deg, #ecfdf5 0%, #ffffff 100%);
+      background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 100%);
       border-color: #10b981;
-      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.12);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, .12);
     }
 
     .service-card-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f1f5f9;
-      color: #334155;
       margin-bottom: 10px;
+      flex: 0 0 auto;
     }
 
-    .service-card.active .service-card-icon {
-      background: #059669;
-      color: #ffffff;
+    .service-card-icon svg {
+      width: 21px;
+      height: 21px;
+      stroke-width: 2.2;
     }
 
     .service-card h4 {
-      font-size: 13.5px;
+      font-size: 13px;
+      line-height: 1.18;
       font-weight: 800;
       color: #0f172a;
+      letter-spacing: -.1px;
     }
 
     .service-card p {
-      font-size: 11px;
+      font-size: 10px;
       color: #64748b;
-      margin-top: 2px;
-      line-height: 1.3;
+      margin-top: 3px;
+      line-height: 1.25;
+      max-width: 145px;
     }
 
     .service-badge-check {
@@ -639,6 +719,18 @@
       border: 1px solid #86efac;
       border-radius: var(--radius-lg);
       margin-top: 20px;
+    }
+
+    /* Compact View Report action -- no large/light panel under the report fields. */
+    .view-report-action {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .view-report-action .btn-primary {
+      min-width: 150px;
+      padding: 10px 18px;
     }
 
     /* =====================================================
@@ -1034,6 +1126,10 @@
       .review-studio-grid {
         grid-template-columns: 1fr;
       }
+
+      .service-selector {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 650px) {
@@ -1045,6 +1141,14 @@
       .dynamic-fields,
       .analysis-controls {
         grid-template-columns: 1fr;
+      }
+
+      .service-selector {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .service-card {
+        min-height: 120px;
       }
 
       .top-nav {
@@ -1061,6 +1165,13 @@
 
       .pane-title {
         font-size: 22px;
+      }
+    }
+
+
+    @media (min-width: 951px) and (max-width: 1180px) {
+      .service-selector {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
       }
     }
 
@@ -1087,6 +1198,17 @@
       }
     }
   </style>
+<style>
+/* NASHO: preserve original emoji/icon colors; only backgrounds may change */
+.service-icon,
+.service-icon i,
+.service-icon .emoji,
+.service-icon .icon-emoji {
+  color: initial !important;
+  -webkit-text-fill-color: initial !important;
+  text-shadow: none;
+}
+</style>
 </head>
 
 <body>
@@ -1272,21 +1394,11 @@
           </div>
         </div>
 
-        <!-- Form Submit Bar -->
-        <div class="form-submit-panel">
-          <div>
-            <span style="font-size:13px;font-weight:700;color:#065f46;">
-              <i data-lucide="check-circle-2"
-                style="width:16px;height:16px;display:inline-block;vertical-align:middle;"></i>
-              Draft ibikwa ako kanya kuri mudasobwa yawe.
-            </span>
-            <p style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">Gukanda "Gusuzuma & Kohereza" bikwereka
-              incamake mbere y'uko byoherezwa muri Google Sheets.</p>
-          </div>
-
+        <!-- View Report action: details remain hidden until the user clicks this button. -->
+        <div class="view-report-action">
           <button type="submit" class="btn-primary" id="btnPreviewSubmit">
-            <i data-lucide="send"></i>
-            <span data-i18n="btn_review_and_submit">Gusuzuma & Kohereza Raporo</span>
+            <i data-lucide="eye"></i>
+            <span data-i18n="btn_review_and_submit">VIEW REPORT</span>
           </button>
         </div>
       </form>
@@ -1657,10 +1769,7 @@
               placeholder="Andika ibitekerezo byawe by'ubusesenguzi: ibyagaragaye, impamvu z'ubwiyongere cyangwa igabanuka ry'abarwayi, ingamba zikwiye gufatwa..."></textarea>
 
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
-              <button class="btn-secondary btn-sm" onclick="printAnalysisReport()">
-                <i data-lucide="printer"></i>
-                <span>Print Analysis</span>
-              </button>
+              
               <button class="btn-primary btn-sm" onclick="saveAnalysisNotesToServer()">
                 <i data-lucide="save"></i>
                 <span>Bika Comments muri Sheets</span>
@@ -1769,7 +1878,7 @@
   </main>
 
   <!-- =====================================================
-       ADMIN LOGIN MODAL (CODE OR USERNAME/PASSWORD)
+       ADMIN LOGIN MODAL (USERNAME/PASSWORD)
   ====================================================== -->
   <div class="modal-backdrop hidden" id="modalAdminLogin">
     <div class="modal-dialog" style="max-width:440px;">
@@ -1778,22 +1887,13 @@
           <div class="card-icon-wrap"><i data-lucide="shield-check"></i></div>
           <div>
             <h3 style="font-size:16px;font-weight:800;">Admin Authentication</h3>
-            <p style="font-size:11.5px;color:var(--text-muted);">Injiza Admin Code cyangwa Username na Password</p>
+            <p style="font-size:11.5px;color:var(--text-muted);">Injiza Username na Password</p>
           </div>
         </div>
         <button class="btn-secondary btn-sm" onclick="closeAdminLoginModal()"><i data-lucide="x"></i></button>
       </div>
 
       <div class="modal-body">
-        <div class="form-group">
-          <label>Admin Passcode / Code y'Umuyobozi</label>
-          <input type="text" id="loginAdminCode" placeholder="Urugero: ADM-JP-2026 cyangwa ADM-JT-2026">
-          <small style="color:var(--text-muted);font-size:11px;">Ushobora kwinjira ukoresheje Code gusa.</small>
-        </div>
-
-        <div style="text-align:center;margin:12px 0;color:var(--text-muted);font-size:12px;font-weight:700;">— CYANGWA —
-        </div>
-
         <div class="form-group">
           <label>Username</label>
           <input type="text" id="loginUsername" placeholder="jeanpierre cyangwa japhet">
@@ -1824,23 +1924,22 @@
   ====================================================== -->
   <div class="modal-backdrop hidden" id="modalReportView">
     <div class="modal-dialog modal-large">
-      <div class="modal-header no-print">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="card-icon-wrap blue"><i data-lucide="file-text"></i></div>
-          <div>
-            <h3 id="modalReportViewTitle">Raporo Irambuye</h3>
-            <p style="font-size:11.5px;color:var(--text-muted);">NASHO Health Center Daily Report Document</p>
-          </div>
+      <div class="modal-header">
+        <div>
+          <h3 id="modalReportViewTitle">Raporo Irambuye</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:3px;">Reba amakuru ya report mbere yo kuyohereza.</p>
         </div>
-        <button class="btn-secondary btn-sm" onclick="closeReportViewModal()"><i data-lucide="x"></i></button>
+        <button class="btn-secondary btn-sm" type="button" onclick="closeReportViewModal()" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
       </div>
 
       <div class="modal-body" id="printableReportContent">
         <div
           style="border-bottom:2px solid #059669;padding-bottom:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <h2 style="font-family:'Outfit',sans-serif;color:#065f46;margin:0;font-size:22px;">NASHO HEALTH CENTER</h2>
-            <p style="color:#64748b;font-size:12px;margin-top:2px;">DAILY SERVICE REPORT DOCUMENT</p>
+            
+            
           </div>
           <div style="text-align:right;">
             <span class="version-tag" id="viewModalReportId">NASHO-REPORT</span>
@@ -1890,15 +1989,14 @@
         </div>
       </div>
 
-      <div class="modal-footer no-print">
-        <button class="btn-secondary" id="btnModalBackEdit" onclick="backToFormEdit()">
-          <i data-lucide="arrow-left"></i> <span>Subira Guhindura</span>
+      <div class="modal-footer" id="reportReviewFooter">
+        <button class="btn-secondary" type="button" id="btnModalBackEdit" onclick="backToFormEdit()">
+          <i data-lucide="arrow-left"></i>
+          <span data-i18n="modal_back">Subira Guhindura</span>
         </button>
-        <button class="btn-secondary" onclick="window.print()">
-          <i data-lucide="printer"></i> <span>Print / PDF</span>
-        </button>
-        <button class="btn-primary" id="btnModalFinalConfirm" onclick="finalizeReportSubmit()">
-          <i data-lucide="send"></i> <span>Emeza & Ohereza Muri Sheets</span>
+        <button class="btn-primary" type="button" id="btnModalFinalConfirm" onclick="finalizeReportSubmit()">
+          <i data-lucide="send"></i>
+          <span data-i18n="modal_submit">SUBMIT REPORT</span>
         </button>
       </div>
     </div>
@@ -2235,6 +2333,7 @@
       restoreSavedDraft();
       restoreSavedEmail();
       updateAdminSessionUI();
+      applyLanguage();
 
       // Load initial data
       loadLocalOrRemoteReports();
@@ -2250,18 +2349,44 @@
       if (dateEl) dateEl.value = today;
     }
 
-    function renderServiceCards() {
+    function renderServiceCards(preserveSelection = false) {
       const container = document.getElementById("serviceCardsContainer");
       if (!container) return;
       container.innerHTML = "";
 
-      Object.entries(SERVICES_DATA).forEach(([key, s]) => {
+      const iconPalettes = [
+        ["#ecfdf5", "#047857", "#a7f3d0"],
+        ["#eff6ff", "#1d4ed8", "#bfdbfe"],
+        ["#fdf4ff", "#9333ea", "#e9d5ff"],
+        ["#fff7ed", "#c2410c", "#fed7aa"],
+        ["#fef2f2", "#b91c1c", "#fecaca"],
+        ["#f0fdfa", "#0f766e", "#99f6e4"],
+        ["#f7fee7", "#4d7c0f", "#d9f99d"],
+        ["#eef2ff", "#4338ca", "#c7d2fe"],
+        ["#fdf2f8", "#be185d", "#fbcfe8"],
+        ["#f0f9ff", "#0369a1", "#bae6fd"]
+      ];
+
+      const serviceEmojis = {
+        OPD: "🩺", IMCI: "😊", ANC: "💓", PNC: "👶",
+        MATERNITY: "💚", VACCINATION: "💉", LABORATORY: "🧪",
+        PHARMACY: "💊", NUTRITION: "🍎", FAMILY_PLANNING: "👨‍👩‍👧‍👦",
+        HIV: "🎗️", TB: "🦠", NCD: "💚", MENTAL_HEALTH: "🧠",
+        DENTAL: "🦷", EYE_CARE: "👁️", GBV: "🛡️",
+        INPATIENT: "🛏️", OTHER: "•••"
+      };
+
+      Object.entries(SERVICES_DATA).forEach(([key, base], index) => {
         const card = document.createElement("div");
-        card.className = "service-card";
+        const s = getLocalizedService(key, currentLanguage);
+        card.className = "service-card" + (preserveSelection && selectedServiceKey === key ? " active" : "");
         card.dataset.serviceKey = key;
+        const palette = iconPalettes[index % iconPalettes.length];
+        card.style.setProperty("--service-icon-bg", palette[0]);
+        card.style.setProperty("--service-icon-border", palette[2]);
         card.innerHTML = `
           <div class="service-badge-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div>
-          <div class="service-card-icon"><i data-lucide="${s.icon}"></i></div>
+          <div class="service-card-icon emoji-service-icon" aria-label="${s.title}">${serviceEmojis[key] || "🔹"}</div>
           <h4>${s.title}</h4>
           <p>${s.description}</p>
         `;
@@ -2274,7 +2399,7 @@
 
     function selectServiceCard(key) {
       selectedServiceKey = key;
-      const s = SERVICES_DATA[key];
+      const s = getLocalizedService(key, currentLanguage);
       if (!s) return;
 
       document.querySelectorAll(".service-card").forEach(c => {
@@ -2310,8 +2435,15 @@
           input = document.createElement("input");
           input.type = type;
           if (type === "number") {
+            // Do not pre-fill 0. The user must enter the actual number for this report.
             input.min = "0";
-            input.value = "0";
+            input.step = "1";
+            input.inputMode = "numeric";
+            input.placeholder = (FIXED_TEXT[currentLanguage] || FIXED_TEXT.rw).numberPlaceholder;
+            input.addEventListener("input", function () {
+              if (this.value !== "" && Number(this.value) < 0) this.value = "0";
+              saveDraftDebounced();
+            });
           }
         }
         input.id = "field_" + fieldId;
@@ -2323,6 +2455,7 @@
       });
 
       if (window.lucide) lucide.createIcons();
+      applyLanguage();
       saveDraftDebounced();
     }
 
@@ -2332,8 +2465,8 @@
       const analysisSelect = document.getElementById("analysisServiceSelect");
       const filterServiceSelect = document.getElementById("filterServiceSelect");
 
-      const optionsHtml = '<option value="ALL">Serivisi Zose (All)</option>' +
-        Object.entries(SERVICES_DATA).map(([k, s]) => `<option value="${k}">${s.title}</option>`).join("");
+      const allLabel = currentLanguage === 'fr' ? 'Tous les services' : currentLanguage === 'en' ? 'All Services' : 'Serivisi Zose (All)';
+      const optionsHtml = `<option value="ALL">${allLabel}</option>` + Object.entries(SERVICES_DATA).map(([k]) => { const s=getLocalizedService(k,currentLanguage); return `<option value="${k}">${s.title}</option>`; }).join('');
 
       if (myHistSelect) myHistSelect.innerHTML = optionsHtml;
       if (adminReportSelect) adminReportSelect.innerHTML = optionsHtml;
@@ -2358,13 +2491,25 @@
       const reportDate = document.getElementById("reportDate").value;
       const shift = document.getElementById("reportShift").value;
 
-      // Gather service values
+      // Gather service values. Every numeric field must contain the exact number entered by the user.
       const serviceData = {};
+      let invalidNumberField = null;
       s.fields.forEach(f => {
         const id = f[0];
-        const val = document.getElementById("field_" + id)?.value ?? "";
+        const type = f[2];
+        const input = document.getElementById("field_" + id);
+        const val = input?.value ?? "";
+        if (type === "number" && (val === "" || !Number.isFinite(Number(val)) || Number(val) < 0)) {
+          invalidNumberField = input;
+        }
         serviceData[id] = val;
       });
+
+      if (invalidNumberField) {
+        invalidNumberField.focus();
+        showToast("Andika umubare nyawo muri buri gice cy'imibare mbere yo kohereza.", "error");
+        return;
+      }
 
       pendingReportToSubmit = {
         id: "NASHO-" + selectedServiceKey + "-" + Date.now().toString().slice(-6),
@@ -2466,7 +2611,8 @@
         closeReportViewModal();
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="send"></i> <span>Emeza & Ohereza Muri Sheets</span>`;
+        const submitLabel = (LANGUAGE_TEXT[currentLanguage] || LANGUAGE_TEXT.rw).modal_submit || "OHEREZA RAPORO";
+        btn.innerHTML = `<i data-lucide="send"></i> <span>${submitLabel}</span>`;
         if (window.lucide) lucide.createIcons();
       }
     }
@@ -2764,8 +2910,7 @@
           id: discId,
           reply: reply,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode
+          password: currentAdminSession?.password
         });
         showToast("Igisubizo cyoherejwe kuri server.", "success");
         logActionToIndex("Reply to Discussion", "Communication", `Admin replied to message ID ${discId}`);
@@ -2774,7 +2919,7 @@
       }
     }
 
-    /* 7. ADMIN AUTHENTICATION (PASSCODE OR USERNAME/PASSWORD) */
+    /* 7. ADMIN AUTHENTICATION (USERNAME + PASSWORD) */
     function openAdminLoginModal() {
       document.getElementById("modalAdminLogin").classList.remove("hidden");
       document.getElementById("loginErrorMessage").classList.add("hidden");
@@ -2784,39 +2929,31 @@
       document.getElementById("modalAdminLogin").classList.add("hidden");
     }
 
-    function submitAdminLogin() {
-      const code = document.getElementById("loginAdminCode").value.trim().toUpperCase();
+    async function submitAdminLogin() {
       const u = document.getElementById("loginUsername").value.trim().toLowerCase();
       const p = document.getElementById("loginPassword").value;
       const errBox = document.getElementById("loginErrorMessage");
 
-      // Valid default accounts & codes
       const validAdmins = [
-        { username: "jeanpierre", password: "JP2026@NASHO", adminCode: "ADM-JP-2026", fullName: "Jean Pierre Nsabimana", role: "Super Admin" },
-        { username: "japhet", password: "JAP2026@NASHO", adminCode: "ADM-JT-2026", fullName: "Japhet Tuyishime", role: "Admin" }
+        { username: "jeanpierre", password: "JP2026@NASHO", fullName: "Jean Pierre Nsabimana", role: "Super Admin" },
+        { username: "japhet", password: "JAP2026@NASHO", fullName: "Japhet Tuyishime", role: "Admin" }
       ];
 
-      let match = null;
-      if (code) {
-        match = validAdmins.find(a => a.adminCode === code);
-      }
-      if (!match && u && p) {
-        match = validAdmins.find(a => a.username.toLowerCase() === u && a.password === p);
+      const match = validAdmins.find(a => a.username === u && a.password === p);
+      if (!match) {
+        errBox.textContent = "Username cyangwa Password ntabwo ari byo. Ongera ugerageze.";
+        errBox.classList.remove("hidden");
+        return;
       }
 
-      if (match) {
-        currentAdminSession = match;
-        sessionStorage.setItem("nasho_admin_session", JSON.stringify(match));
-        closeAdminLoginModal();
-        updateAdminSessionUI();
-        showToast("Kwinjira byagenze neza. Murakaza neza, " + match.fullName + "!", "success");
-        logActionToIndex("Admin Login", "Security", `Admin ${match.fullName} logged in with code ${match.adminCode}`);
-        switchMainTab("admin");
-        refreshAdminData();
-      } else {
-        errBox.textContent = "Admin Code cyangwa Umwirondoro wanditse ntabwo ari byo. Ongera ugerageze.";
-        errBox.classList.remove("hidden");
-      }
+      currentAdminSession = match;
+      sessionStorage.setItem("nasho_admin_session", JSON.stringify(match));
+      closeAdminLoginModal();
+      updateAdminSessionUI();
+      showToast("Kwinjira byagenze neza. Murakaza neza, " + match.fullName + "!", "success");
+      logActionToIndex("Admin Login", "Security", `Admin ${match.fullName} logged in`);
+      switchMainTab("admin");
+      refreshAdminData();
     }
 
     function logoutAdmin() {
@@ -2839,7 +2976,6 @@
           <div class="admin-nav-badge">
             <i data-lucide="shield-check" style="width:15px;height:15px;"></i>
             <span>${escapeHtml(currentAdminSession.fullName)}</span>
-            <span class="admin-code-tag">${escapeHtml(currentAdminSession.adminCode)}</span>
             <button onclick="logoutAdmin()" title="Logout" style="border:0;background:transparent;color:#dc2626;margin-left:4px;padding:0;cursor:pointer;">
               <i data-lucide="log-out" style="width:13px;height:13px;"></i>
             </button>
@@ -2885,24 +3021,24 @@
       }
       showToast("Turimo kuvugurura amakuru yose ya server...", "info");
       try {
-        const res = await fetchGasJsonp({
-          action: "allReports",
+        const res = await callGasBridge("allReports", {
           username: currentAdminSession.username,
-          password: currentAdminSession.password,
-          adminCode: currentAdminSession.adminCode
+          password: currentAdminSession.password
         });
-        if (res && res.success && Array.isArray(res.reports)) {
-          allReports = res.reports;
-          saveLocalReports();
+        if (!res || !res.success || !Array.isArray(res.reports)) {
+          throw new Error((res && res.message) || "Server did not return reports.");
         }
+        allReports = res.reports;
+        saveLocalReports();
+        updateDashboardCounters();
+        filterAdminReportsList();
+        renderAllReportsTable();
+        await loadActivityLogs();
+        showToast(`Amakuru yavuguruwe neza: ${allReports.length} reports.`, "success");
       } catch (err) {
         console.warn("Refresh admin data err:", err);
+        showToast("Ntabwo reports zakuwe kuri server: " + (err.message || err), "error");
       }
-      updateDashboardCounters();
-      filterAdminReportsList();
-      renderAllReportsTable();
-      loadActivityLogs();
-      showToast("Amakuru yose yavuguruwe neza.", "success");
     }
 
     function filterAdminReportsList() {
@@ -3005,8 +3141,7 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode
+          password: currentAdminSession?.password
         });
         showToast("Review yabitswe neza muri Google Sheets.", "success");
         logActionToIndex("Save Report Review", selectedReportForReview.service, `Saved review for Report ${selectedReportForReview.id}`);
@@ -3054,8 +3189,7 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode
+          password: currentAdminSession?.password
         });
         showToast(`Review n'inama byoherejwe neza kuri email: ${reporterEmail}!`, "success");
         logActionToIndex("Send Review Email", selectedReportForReview.service, `Sent review email to ${reporterEmail} for Report ${selectedReportForReview.id}`);
@@ -3224,8 +3358,7 @@
         const res = await fetchGasJsonp({
           action: "getActivityLog",
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode
+          password: currentAdminSession?.password
         });
         if (res && res.success && Array.isArray(res.activities)) {
           activityLogs = res.activities;
@@ -3586,19 +3719,82 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
     }
 
-    /* 13. GOOGLE APPS SCRIPT HTTP / JSONP BRIDGE */
-    async function postToGas(payload) {
-      const body = new URLSearchParams();
-      Object.entries(payload).forEach(([k, v]) => {
-        body.append(k, typeof v === "object" ? JSON.stringify(v) : String(v ?? ""));
-      });
+    /* 13. GOOGLE APPS SCRIPT HTTP / IFRAME BRIDGE */
+    let nashoBridgeFrame = null;
+    let nashoBridgeReady = false;
+    const nashoBridgePending = new Map();
 
-      return fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: body.toString()
+    function ensureNashoBridge() {
+      if (nashoBridgeFrame) return nashoBridgeFrame;
+      nashoBridgeFrame = document.createElement("iframe");
+      nashoBridgeFrame.title = "NASHO Secure Bridge";
+      nashoBridgeFrame.style.cssText = "position:fixed;width:1px;height:1px;left:-10px;bottom:-10px;border:0;opacity:0;pointer-events:none;";
+      nashoBridgeFrame.src = API_URL + "?action=bridge&_=" + Date.now();
+      document.body.appendChild(nashoBridgeFrame);
+      return nashoBridgeFrame;
+    }
+
+    window.addEventListener("message", function(event) {
+      const data = event.data || {};
+      if (data.source !== "NASHO_DAILY_REPORT_BRIDGE") return;
+      if (data.type === "READY") {
+        nashoBridgeReady = true;
+        return;
+      }
+      if (data.type !== "RESULT" && data.type !== "ERROR") return;
+      const requestId = data.payload && data.payload.requestId;
+      const pending = requestId ? nashoBridgePending.get(requestId) : null;
+      if (!pending) return;
+      nashoBridgePending.delete(requestId);
+      clearTimeout(pending.timer);
+      if (data.type === "RESULT") pending.resolve(data.payload.result);
+      else pending.reject(new Error(data.payload.message || "Bridge request failed"));
+    });
+
+    function callGasBridge(action, params = {}, timeoutMs = 30000) {
+      return new Promise((resolve, reject) => {
+        const frame = ensureNashoBridge();
+        const requestId = "req_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        const timer = setTimeout(() => {
+          nashoBridgePending.delete(requestId);
+          reject(new Error("Server request timed out."));
+        }, timeoutMs);
+        nashoBridgePending.set(requestId, { resolve, reject, timer });
+
+        const send = () => {
+          try {
+            frame.contentWindow.postMessage({
+              source: "NASHO_DAILY_REPORT",
+              requestId,
+              action,
+              params
+            }, "*");
+          } catch (e) {
+            clearTimeout(timer);
+            nashoBridgePending.delete(requestId);
+            reject(e);
+          }
+        };
+
+        if (nashoBridgeReady) send();
+        else {
+          const started = Date.now();
+          const wait = setInterval(() => {
+            if (nashoBridgeReady) { clearInterval(wait); send(); }
+            else if (Date.now() - started > 10000) {
+              clearInterval(wait);
+              clearTimeout(timer);
+              nashoBridgePending.delete(requestId);
+              reject(new Error("NASHO server bridge could not start."));
+            }
+          }, 100);
+        }
       });
+    }
+
+    async function postToGas(payload) {
+      const action = payload.action || "submitReport";
+      return callGasBridge(action, payload);
     }
 
     function fetchGasJsonp(params, timeoutMs = 20000) {
@@ -3611,23 +3807,16 @@
         query.set("_", Date.now());
 
         let done = false;
-        const cleanup = () => {
-          try { script.remove(); } catch (e) { }
-          delete window[cbName];
-        };
-
+        const cleanup = () => { try { script.remove(); } catch (e) {} delete window[cbName]; };
         const timer = setTimeout(() => {
           if (!done) { done = true; cleanup(); reject(new Error("Request timed out")); }
         }, timeoutMs);
-
         window[cbName] = (data) => {
           if (!done) { done = true; clearTimeout(timer); cleanup(); resolve(data); }
         };
-
         script.onerror = () => {
           if (!done) { done = true; clearTimeout(timer); cleanup(); reject(new Error("Network error")); }
         };
-
         script.src = API_URL + "?" + query.toString();
         document.head.appendChild(script);
       });
@@ -3639,28 +3828,37 @@
       dot.className = "status-dot syncing";
       txt.textContent = "Google Sheets: Gusuzuma...";
       try {
-        const res = await fetchGasJsonp({ action: "health" });
+        const res = await callGasBridge("health");
         if (res && res.status === "ONLINE") {
           dot.className = "status-dot";
           txt.textContent = "Google Sheets: Ihuje (Online)";
           showToast("Isano na Google Sheets rimeze neza!", "success");
-        } else {
-          throw new Error("Offline response");
-        }
+        } else throw new Error("Offline response");
       } catch (err) {
         dot.className = "status-dot error";
         txt.textContent = "Google Sheets: Iri Offline";
-        showToast("Ntabwo bibashije guhuzwa na Google Sheets ako kanya.", "error");
+        showToast("Ntabwo server ihari: " + (err.message || err), "error");
       }
     }
 
-    /* 14. LANGUAGE TOGGLE (Kinyarwanda & English) */
-    function toggleLanguage() {
-      currentLanguage = currentLanguage === "rw" ? "en" : "rw";
-      localStorage.setItem("nasho_lang", currentLanguage);
-      document.getElementById("langCurrentText").textContent = currentLanguage === "rw" ? "English" : "Kinyarwanda";
-      showToast(currentLanguage === "rw" ? "Ururimi rwahinduwe: Kinyarwanda" : "Language set to English", "info");
-    }
+    /* 14. LANGUAGE SYSTEM (Kinyarwanda, English & French) */
+    const LANGUAGE_TEXT = {
+      rw:{tab_new_report:"Tanga Raporo Nshya",tab_my_reports:"Raporo Zanjye",tab_discussion:"Igice cyo Kuganira",tab_admin_portal:"Admin Portal & Review",tab_all_history:"Amateka ya Raporo",form_title:"Kuzuza Raporo y'Umunsi ya Serivisi",form_subtitle:"Injiza amakuru y'umukozi, hitamo serivisi wakozemo uyu munsi, maze wuzuze ibipimo.",staff_info_title:"1. Amakuru y'Umukozi",staff_name_label:"Izina ry'Umukozi *",staff_email_label:"Email y'Umukozi *",staff_phone_label:"Nimero ya Telefone *",report_date_label:"Itariki ya Raporo *",shift_label:"Shift *",selected_service_label:"Serivisi Yahiswemo *",select_service_title:"2. Hitamo Service",btn_review_and_submit:"REBA RAPORO",my_reports_title:"Raporo Zanjye",discussion_title:"Igice cyo Kuganira & Ubutumwa",admin_portal_title:"Admin Management & Review Portal",all_history_title:"Amateka ya Raporo Zose",modal_back:"Subira Guhindura",modal_submit:"OHEREZA RAPORO"},
+      en:{tab_new_report:"New Report",tab_my_reports:"My Reports",tab_discussion:"Discussion",tab_admin_portal:"Admin Portal & Review",tab_all_history:"Report History",form_title:"Complete Daily Service Report",form_subtitle:"Enter staff information, select the service you worked in today, and complete the indicators.",staff_info_title:"1. Staff Information",staff_name_label:"Staff Name *",staff_email_label:"Staff Email *",staff_phone_label:"Phone Number *",report_date_label:"Report Date *",shift_label:"Shift *",selected_service_label:"Selected Service *",select_service_title:"2. Select Service",btn_review_and_submit:"VIEW REPORT",my_reports_title:"My Reports",discussion_title:"Discussion & Messages",admin_portal_title:"Admin Management & Review Portal",all_history_title:"All Report History",modal_back:"Back to Edit",modal_submit:"SUBMIT REPORT"},
+      fr:{tab_new_report:"Nouveau rapport",tab_my_reports:"Mes rapports",tab_discussion:"Discussion",tab_admin_portal:"Portail Admin & Révision",tab_all_history:"Historique des rapports",form_title:"Remplir le rapport quotidien des services",form_subtitle:"Saisissez les informations du personnel, choisissez le service du jour et complétez les indicateurs.",staff_info_title:"1. Informations du personnel",staff_name_label:"Nom du personnel *",staff_email_label:"Email du personnel *",staff_phone_label:"Numéro de téléphone *",report_date_label:"Date du rapport *",shift_label:"Service / Shift *",selected_service_label:"Service sélectionné *",select_service_title:"2. Choisissez le service",btn_review_and_submit:"VOIR LE RAPPORT",my_reports_title:"Mes rapports",discussion_title:"Discussion et messages",admin_portal_title:"Portail de gestion et de révision Admin",all_history_title:"Historique de tous les rapports",modal_back:"Retour à la modification",modal_submit:"ENVOYER LE RAPPORT"}
+    };
+    const FIXED_TEXT={
+      rw:{staffHint:"Aya makuru azakoreshwa no koherezwa kuri email yawe ukimara gutanga raporo.",emailHint:"Iyi email ni yo Admin azagusubirizaho.",serviceHint:"Kanda kuri serivisi imwe kugira ngo ibipimo byayo bifunguke.",activeDesc:"Uzuza imibare n'ibisobanuro by'uyu munsi.",draft:"Draft ibikwa ako kanya kuri mudasobwa yawe.",preview:'Kanda "Reba Raporo" kugira ngo ubone amakuru wanditse mbere yo kuyohereza.',selectedPlaceholder:"Hitamo serivisi hepfo",namePlaceholder:"Urugero: Jean Pierre Nsabimana",numberPlaceholder:"Andika umubare"},
+      en:{staffHint:"This information will also be used to send a copy to your email after you submit the report.",emailHint:"This is the email Admin will use to reply to you.",serviceHint:"Click one service to open its indicators.",activeDesc:"Complete today's numbers and notes.",draft:"Draft is saved immediately on your computer.",preview:'Click "View Report" to see the information you entered before submitting it.',selectedPlaceholder:"Select a service below",namePlaceholder:"Example: Jean Pierre Nsabimana",numberPlaceholder:"Enter number"},
+      fr:{staffHint:"Ces informations serviront aussi à vous envoyer une copie par email après l’envoi du rapport.",emailHint:"C’est l’email que l’Admin utilisera pour vous répondre.",serviceHint:"Cliquez sur un service pour ouvrir ses indicateurs.",activeDesc:"Complétez les chiffres et les notes du jour.",draft:"Le brouillon est enregistré immédiatement sur votre ordinateur.",preview:'Cliquez sur « Voir le rapport » pour vérifier les informations saisies avant l’envoi.',selectedPlaceholder:"Sélectionnez un service ci-dessous",namePlaceholder:"Exemple : Jean Pierre Nsabimana",numberPlaceholder:"Saisir le nombre"}
+    };
+    const FR_SERVICE={"Outpatient Department":"Service de consultations externes","Ubuvuzi bw'Abana (Integrated Child Illness)":"Prise en charge intégrée des maladies de l'enfant","Gupima Abatwite (Antenatal Care)":"Consultation prénatale","Kwita ku Babyaye (Postnatal Care)":"Soins postnatals","Kubyaza n'Amasuka (Delivery Services)":"Services d'accouchement","Gukingira Abana n'Abakuru (Immunization)":"Vaccination / Immunisation","Ibizamini byo muri Laboratwari":"Analyses de laboratoire","Imirire n'Imikurire":"Nutrition et croissance","Ibiro by'Imiti":"Pharmacie / Médicaments","Kuboneza Urubyaro":"Planification familiale","Kwipimisha no Kurwanya SIDA":"VIH : dépistage et prise en charge","Igituntu (Tuberculosis)":"Tuberculose","Indwara Zandura (Hypertension, Diabete)":"Maladies non transmissibles (HTA, diabète)","Ubuzima bwo mu Mutwe":"Santé mentale","Ubuvuzi bw'Amenyo":"Soins dentaires","Ubuvuzi bw'Amaso":"Soins ophtalmologiques","Ihohoterwa rishingiye ku Gitsina":"Violence basée sur le genre","Abarwariye mu Bitaro":"Hospitalisation","Izindi Serivisi Zidasobanutse Hejuru":"Autres services"};
+    const FR_FIELD={"Patients Received":"Patients reçus","Discharged":"Sortis","Not Discharged":"Non sortis","Referred":"Référés","Admitted":"Admis","Lost / Not Completed":"Service non terminé","Recommendations":"Recommandations","Challenges":"Difficultés rencontrées","Reason":"Motif","Children Received":"Enfants reçus","Children Treated":"Enfants traités","New Registrations":"Nouvelles inscriptions","Revisits":"Visites de suivi","Total Received":"Total reçu","First PNC Visits":"Premières visites PNC","Follow-up":"Suivi","Deliveries Conducted":"Accouchements réalisés","Normal Deliveries":"Accouchements normaux","Complicated":"Accouchements compliqués","In Labor":"Femmes en travail","New Children Registered":"Nouveaux enfants enregistrés","Scheduled":"Vaccins prévus","Missed":"Vaccinations manquées","Lab Requests":"Demandes d’analyses","Tests Performed":"Analyses réalisées","Completed":"Résultats terminés","Results Pending":"Résultats en attente","Out of Stock":"Rupture de stock","Clients Received":"Clients reçus","Screened":"Dépistés","Patients Served":"Patients servis","New Clients":"Nouveaux clients","Continuing":"Clients en continuation","Short Term":"Méthodes à court terme","Long Term":"Méthodes à long terme","Permanent":"Méthodes permanentes","Not Served":"Non servis","Tested":"Testés","HIV Positive":"VIH positif","HIV Negative":"VIH négatif","Linked to Care":"Liés aux soins","Started ARVs":"ARV commencés","Confirmed":"Cas confirmés","Started Treatment":"Traitement commencé","Hypertension":"Hypertension","Diabetes":"Diabète","New Cases":"Nouveaux cas","Follow-up Clients":"Clients en suivi","Examined":"Examinés","Procedures":"Actes réalisés","Medical":"Prise en charge médicale","Psychosocial":"Prise en charge psychosociale","Currently Admitted":"Actuellement hospitalisés","Transferred":"Transférés","Deaths":"Décès","Description":"Description","Served":"Servis"};
+    function localizeServiceLabel(label,lang){if(lang==='rw')return label;if(lang==='en'){const m=label.match(/\(([^()]*)\)/);if(m&&m[1])return m[1];return ({"Abinjijwe uyu munsi (Admitted)":"Admitted","Abakiriwe Bose (Clients Received)":"Clients Received","Abavuwe":"Treated","Aboherejwe":"Referred","Imbogamizi":"Challenges","Inama":"Recommendations","Impamvu":"Reason"}[label]||label);}let en=localizeServiceLabel(label,'en');for(const [k,v] of Object.entries(FR_FIELD))if(en.toLowerCase().includes(k.toLowerCase()))return v;return en;}
+    function getLocalizedService(key,lang){const base=SERVICES_DATA[key];if(!base)return null;if(lang==='rw')return {title:base.title,description:base.description,fields:base.fields};let title=base.title,description=base.description;if(lang==='en'){title=({"Maternity / Delivery":"Maternity / Delivery","Vaccination / EPI":"Vaccination / EPI","Pharmacy / Drugs":"Pharmacy","Other Services":"Other Services"}[title]||title);description=base.description.match(/\(([^()]*)\)/)?.[1]||({"Ibiro by'Imiti":"Pharmacy / Medicines","Imirire n'Imikurire":"Nutrition and Growth","Ubuzima bwo mu Mutwe":"Mental Health","Ubuvuzi bw'Amenyo":"Dental Care","Ubuvuzi bw'Amaso":"Eye Care","Abarwariye mu Bitaro":"Inpatient Services"}[base.description]||base.description);}else{title=({"Maternity / Delivery":"Maternité / Accouchement","Vaccination / EPI":"Vaccination / Immunisation","Laboratory":"Laboratoire","Pharmacy / Drugs":"Pharmacie / Médicaments","Family Planning":"Planification familiale","Mental Health":"Santé mentale","Dental":"Soins dentaires","Eye Care":"Soins ophtalmologiques","Inpatient":"Hospitalisation","Other Services":"Autres services"}[title]||title);description=FR_SERVICE[base.description]||base.description;}return {title,description,fields:base.fields.map(f=>[f[0],localizeServiceLabel(f[1],lang),f[2]])};}
+    function applyLanguage(){const dict=LANGUAGE_TEXT[currentLanguage]||LANGUAGE_TEXT.rw;document.documentElement.lang=currentLanguage;document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(dict[k]!==undefined)el.textContent=dict[k];});const fixed=FIXED_TEXT[currentLanguage]||FIXED_TEXT.rw;const hints=document.querySelectorAll('.section-hint');if(hints[0])hints[0].textContent=fixed.staffHint;const emailInput=document.getElementById('reporterEmail');const emailSmall=emailInput?.parentElement?.querySelector('small');if(emailSmall)emailSmall.textContent=fixed.emailHint;const serviceCard=document.getElementById('serviceCardsContainer')?.closest('.form-card');const serviceHint=serviceCard?.querySelector('p');if(serviceHint)serviceHint.textContent=fixed.serviceHint;const activeDesc=document.getElementById('activeServiceDesc');if(activeDesc&&selectedServiceKey)activeDesc.textContent=getLocalizedService(selectedServiceKey,currentLanguage)?.description||fixed.activeDesc;const selected=document.getElementById('selectedServiceName');if(selected)selected.placeholder=fixed.selectedPlaceholder;const name=document.getElementById('reporterName');if(name)name.placeholder=fixed.namePlaceholder;document.querySelectorAll('input[type="number"]').forEach(i=>i.placeholder=fixed.numberPlaceholder);renderServiceCards(true);populateServiceDropdowns();if(selectedServiceKey){const ss=getLocalizedService(selectedServiceKey,currentLanguage);const title=document.getElementById('activeServiceTitle');if(title&&ss)title.textContent=ss.title;if(activeDesc&&ss)activeDesc.textContent=ss.description;document.querySelectorAll('#dynamicFieldsContainer label').forEach((lab,i)=>{const orig=SERVICES_DATA[selectedServiceKey]?.fields[i];if(orig)lab.textContent=localizeServiceLabel(orig[1],currentLanguage)+' *';});}const lt=document.getElementById('langCurrentText');if(lt)lt.textContent=currentLanguage==='rw'?'English':currentLanguage==='en'?'Français':'Kinyarwanda';if(window.lucide)lucide.createIcons();}
+    function toggleLanguage(){const order=['rw','en','fr'];currentLanguage=order[(order.indexOf(currentLanguage)+1)%order.length];localStorage.setItem('nasho_lang',currentLanguage);applyLanguage();showToast(currentLanguage==='rw'?'Ururimi: Kinyarwanda':currentLanguage==='en'?'Language: English':'Langue : Français','info');}
+
   </script>
 </body>
 
