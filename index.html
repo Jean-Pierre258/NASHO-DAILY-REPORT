@@ -2562,9 +2562,8 @@
 
       const r = pendingReportToSubmit;
 
-      // Save locally first
-      allReports.unshift(r);
-      saveLocalReports();
+      // IMPORTANT: DO NOT save reports in browser/localStorage.
+      // Google Sheets is the single source of truth.
 
       // Remember email
       localStorage.setItem("nasho_saved_email", r.reporterEmail);
@@ -2618,7 +2617,7 @@
         renderAllReportsTable();
       } catch (err) {
         console.error("Submit error:", err);
-        showToast("Raporo yabitswe muri mudasobwa yawe ariko habaye ikibazo mu kuyihuza na server: " + err.message, "error");
+        showToast("Raporo ntiyemejwe na Google Sheets: " + err.message, "error");
         closeReportViewModal();
       } finally {
         btn.disabled = false;
@@ -2662,14 +2661,17 @@
         // Try reading from Google Sheets
         const res = await fetchGasJsonp({ action: "myReports", email: email, service: serviceFilter });
         if (res && res.success && Array.isArray(res.reports)) {
+          // GOOGLE SHEETS ONLY
           myReports = res.reports;
         } else {
-          // Fallback to local
-          myReports = allReports.filter(r => String(r.reporterEmail).toLowerCase() === email);
+          // Never use browser/local data as a fallback.
+          myReports = [];
+          throw new Error(res?.message || "Google Sheets ntiyagaruye reports.");
         }
       } catch (err) {
-        console.warn("My reports fetch fallback:", err);
-        myReports = allReports.filter(r => String(r.reporterEmail).toLowerCase() === email);
+        console.warn("My reports server error:", err);
+        myReports = [];
+        showToast("Ntabwo amakuru yabonetse muri Google Sheets.", "error");
       }
 
       // Filter by service if selected
@@ -3654,14 +3656,21 @@
       if (totalBadge) totalBadge.textContent = allReports.length;
     }
 
+    /* =====================================================
+       REPORT STORAGE POLICY
+       Google Sheets is the ONLY source of report data.
+       Reports are NEVER loaded from or saved to localStorage.
+    ===================================================== */
     function loadLocalOrRemoteReports() {
-      allReports = JSON.parse(localStorage.getItem("nasho_all_reports") || "[]");
+      // Do not restore reports from this browser.
+      allReports = [];
       updateDashboardCounters();
       renderAllReportsTable();
     }
 
     function saveLocalReports() {
-      localStorage.setItem("nasho_all_reports", JSON.stringify(allReports));
+      // Kept only for compatibility with older functions.
+      // It intentionally does NOT save reports to the browser.
       updateDashboardCounters();
     }
 
