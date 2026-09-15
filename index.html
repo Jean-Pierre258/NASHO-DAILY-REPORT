@@ -2585,13 +2585,13 @@
         // Merge indicators
         Object.entries(r.serviceData).forEach(([k, v]) => { payload[k] = v; });
 
-        // Use JSONP GET for the final submission. This is deliberately used
-        // for Blogger cross-origin reliability; Apps Script now handles
-        // submitReport in doGet and writes to Sheets + sends emails server-side.
-        const result = await fetchGasJsonp(payload, 30000);
+        // IMPORTANT: submit through a hidden HTML form using POST.
+        // This avoids Blogger cross-origin fetch/JSONP/URL-length issues.
+        // Apps Script doPost() receives the complete report directly.
+        const result = await submitReportByFormPost(payload, r.reporterEmail, r.id);
 
         if (!result || !result.success) {
-          throw new Error((result && result.message) || "Server did not accept the report.");
+          throw new Error((result && result.message) || "Server did not confirm the report.");
         }
 
         logActionToIndex("Submit Daily Report", r.service, `Report ID ${r.id} submitted by ${r.reporterName} (${r.reporterEmail})`);
@@ -3806,6 +3806,91 @@
     async function postToGas(payload) {
       const action = payload.action || "submitReport";
       return callGasBridge(action, payload);
+    }
+
+    function submitReportByFormPost(payload, reporterEmail, reportId) {
+      return new Promise((resolve, reject) => {
+        const frameName = "nasho_submit_frame_" + Date.now();
+        const iframe = document.createElement("iframe");
+        iframe.name = frameName;
+        iframe.style.cssText = "position:fixed;width:1px;height:1px;left:-20px;bottom:-20px;border:0;opacity:0;";
+        document.body.appendChild(iframe);
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = API_URL;
+        form.target = frameName;
+        form.style.display = "none";
+
+        Object.entries(payload).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value ?? "");
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+
+        let finished = false;
+        let attempts = 0;
+        const maxAttempts = 12;
+
+        const cleanup = () => {
+          try { form.remove(); } catch (e) {}
+          try { iframe.remove(); } catch (e) {}
+        };
+
+        const fail = (message) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          reject(new Error(message));
+        };
+
+        // Submit immediately. A normal cross-origin HTML form POST is not
+        // blocked by CORS, unlike fetch().
+        form.submit();
+
+        // Confirm that Apps Script actually saved the report by asking the
+        // read endpoint for reports belonging to this reporter.
+        const verify = async () => {
+          if (finished) return;
+          attempts++;
+          try {
+            const response = await fetchGasJsonp({
+              action: "myReports",
+              email: reporterEmail,
+              service: payload.reportType || "ALL"
+            }, 10000);
+
+            if (response && response.success && Array.isArray(response.reports)) {
+              const found = response.reports.some(r => String(r.id || "") === String(reportId));
+              if (found) {
+                finished = true;
+                cleanup();
+                resolve({
+                  success: true,
+                  status: "SUCCESS",
+                  message: "Report confirmed in Google Sheets.",
+                  reportId: reportId
+                });
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn("Submit verification attempt " + attempts + ":", e);
+          }
+
+          if (attempts < maxAttempts) {
+            setTimeout(verify, 1000);
+          } else {
+            fail("Report was sent to the server, but Google Sheets did not confirm it. Check Apps Script deployment and execution logs.");
+          }
+        };
+
+        setTimeout(verify, 1500);
+      });
     }
 
     function fetchGasJsonp(params, timeoutMs = 20000) {
