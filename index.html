@@ -2585,11 +2585,22 @@
         // Merge indicators
         Object.entries(r.serviceData).forEach(([k, v]) => { payload[k] = v; });
 
-        await postToGas(payload);
+        // Use JSONP GET for the final submission. This is deliberately used
+        // for Blogger cross-origin reliability; Apps Script now handles
+        // submitReport in doGet and writes to Sheets + sends emails server-side.
+        const result = await fetchGasJsonp(payload, 30000);
+
+        if (!result || !result.success) {
+          throw new Error((result && result.message) || "Server did not accept the report.");
+        }
 
         logActionToIndex("Submit Daily Report", r.service, `Report ID ${r.id} submitted by ${r.reporterName} (${r.reporterEmail})`);
 
-        showToast("Raporo yoherejwe neza kuri Google Sheets kandi yakiriwe!", "success");
+        if (result.status === "PARTIAL") {
+          showToast("Raporo yagiye muri Google Sheets, ariko email ya Admin ntiyoherejwe: " + (result.adminEmailErrors || "reba Email Log"), "error");
+        } else {
+          showToast("Raporo yagiye muri Google Sheets kandi email ya Admin yoherejwe neza!", "success");
+        }
         closeReportViewModal();
 
         // Clear form
