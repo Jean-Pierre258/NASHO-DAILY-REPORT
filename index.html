@@ -1573,7 +1573,7 @@
       <div class="pane-header">
         <div>
           <h2 class="pane-title" data-i18n="admin_portal_title">Admin Management & Review Portal</h2>
-          <p class="pane-desc">Kureba raporo zose, gutanga review & feedback kuri email ya nyirayo, kugenzura ibyakorewe
+          <p class="pane-desc">Kureba raporo zose za services zose nta email isabwa, gutanga comment na recommendation, no kohereza feedback kuri email ya nyirayo, kugenzura ibyakorewe
             muri index, no gusesengura imibare.</p>
         </div>
 
@@ -1622,7 +1622,7 @@
             </div>
 
             <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-              <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, email, service..."
+              <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, service, Report ID..."
                 oninput="filterAdminReportsList()" style="flex:1;min-width:220px;">
               <select id="adminReportFilterService" onchange="filterAdminReportsList()" style="width:160px;">
                 <option value="ALL">Services Zose</option>
@@ -1651,7 +1651,7 @@
               <div style="display:flex;align-items:center;gap:10px;">
                 <div class="card-icon-wrap blue"><i data-lucide="mail-plus"></i></div>
                 <div>
-                  <h3 id="reviewSelectedReportTitle">Review & Subiza kuri Email</h3>
+                  <h3 id="reviewSelectedReportTitle">Comment & Recommendation kuri Report</h3>
                   <p id="reviewSelectedReportSub" style="font-size:11.5px;color:var(--text-muted);">Hitamo raporo
                     ibumoso kugira ngo uyisuzume.</p>
                 </div>
@@ -2934,7 +2934,8 @@
           id: discId,
           reply: reply,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password
+          password: currentAdminSession?.password,
+          adminCode: currentAdminSession?.adminCode || ""
         });
         showToast("Igisubizo cyoherejwe kuri server.", "success");
         logActionToIndex("Reply to Discussion", "Communication", `Admin replied to message ID ${discId}`);
@@ -3038,20 +3039,36 @@
       }
     }
 
+    async function loadAllAdminReportsWithoutEmail() {
+      if (!currentAdminSession) throw new Error("Admin session is missing.");
+      const params = {
+        action: "allReports",
+        username: currentAdminSession.username || "",
+        password: currentAdminSession.password || "",
+        adminCode: currentAdminSession.adminCode || ""
+      };
+      // Use the same HTTP/JSONP read pattern as My Reports.
+      // Admin authentication is done with username/password/adminCode, not reporter email.
+      try {
+        const jsonpResult = await fetchGasJsonp(params, 20000);
+        if (jsonpResult && jsonpResult.success && Array.isArray(jsonpResult.reports)) {
+          return jsonpResult;
+        }
+        throw new Error((jsonpResult && jsonpResult.message) || "Server did not return reports.");
+      } catch (jsonpError) {
+        console.warn("Admin JSONP read failed; trying bridge fallback:", jsonpError);
+        return callGasBridge("allReports", params, 30000);
+      }
+    }
+
     async function refreshAdminData() {
       if (!currentAdminSession) {
         openAdminLoginModal();
         return;
       }
-      showToast("Turimo kuvugurura amakuru yose ya server...", "info");
+      showToast("Turimo kuzana raporo zose za services zose...", "info");
       try {
-        const res = await callGasBridge("allReports", {
-          username: currentAdminSession.username,
-          password: currentAdminSession.password,
-          adminCode: currentAdminSession.adminCode || "",
-          startDate: document.getElementById("adminReportsStartDate")?.value || "",
-          endDate: document.getElementById("adminReportsEndDate")?.value || ""
-        });
+        const res = await loadAllAdminReportsWithoutEmail();
         if (!res || !res.success || !Array.isArray(res.reports)) {
           throw new Error((res && res.message) || "Server did not return reports.");
         }
@@ -3181,7 +3198,8 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password
+          password: currentAdminSession?.password,
+          adminCode: currentAdminSession?.adminCode || ""
         });
         showToast("Review yabitswe neza muri Google Sheets.", "success");
         logActionToIndex("Save Report Review", selectedReportForReview.service, `Saved review for Report ${selectedReportForReview.id}`);
