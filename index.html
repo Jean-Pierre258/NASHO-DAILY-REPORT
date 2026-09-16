@@ -1279,6 +1279,11 @@
       <span data-i18n="tab_admin_portal">Admin Portal & Review</span>
       <span class="badge-counter" id="totalReportsBadge">0</span>
     </button>
+
+    <button class="tab-btn" id="tabBtnAllHistory" onclick="switchMainTab('allHistory')">
+      <i data-lucide="history"></i>
+      <span data-i18n="tab_all_history">Amateka ya Raporo</span>
+    </button>
   </nav>
 
   <!-- =====================================================
@@ -1820,7 +1825,55 @@
     <!-- ===================================================
          5. ALL HISTORY TAB (PUBLIC / EXPORT)
     ==================================================== -->
-    
+    <section id="sectionAllHistory" class="tab-pane">
+      <div class="pane-header">
+        <div>
+          <h2 class="pane-title" data-i18n="all_history_title">Amateka ya Raporo Zose (All Reports)</h2>
+          <p class="pane-desc">Shakisha, reba incamake, cyangwa wohereze amakuru muri CSV / JSON backup.</p>
+        </div>
+
+        <div class="header-tools">
+          <button class="btn-secondary" onclick="exportDataToCsv()">
+            <i data-lucide="download"></i>
+            <span>Export CSV</span>
+          </button>
+          <button class="btn-secondary" onclick="exportBackupJson()">
+            <i data-lucide="save"></i>
+            <span>Backup JSON</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+          <input type="text" id="filterSearchInput" placeholder="Shakisha umukozi, serivisi, email..."
+            oninput="filterAllReportsTable()" style="flex:1;min-width:220px;">
+          <select id="filterServiceSelect" onchange="filterAllReportsTable()" style="width:200px;">
+            <option value="ALL">Serivisi Zose</option>
+          </select>
+          <input type="date" id="filterDateInput" onchange="filterAllReportsTable()" style="width:180px;">
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Itariki</th>
+                <th>Umukozi</th>
+                <th>Email</th>
+                <th>Serivisi</th>
+                <th>Shift</th>
+                <th>Status</th>
+                <th>Igikorwa</th>
+              </tr>
+            </thead>
+            <tbody id="allReportsTableBody">
+              <!-- Rendered table rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
   </main>
 
@@ -2870,8 +2923,7 @@
           id: discId,
           reply: reply,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode || ""
+          password: currentAdminSession?.password
         });
         showToast("Igisubizo cyoherejwe kuri server.", "success");
         logActionToIndex("Reply to Discussion", "Communication", `Admin replied to message ID ${discId}`);
@@ -2981,7 +3033,7 @@
         return;
       }
 
-      showToast("Turimo gukurura raporo zose za services kuri server...", "info");
+      showToast("Turimo gukura raporo zose muri Google Sheets...", "info");
 
       const authParams = {
         action: "allReports",
@@ -2991,47 +3043,43 @@
       };
 
       let lastError = null;
+      let res = null;
 
-      // 1) Koresha JSONP mbere: ikora no mu gihe iframe bridge yananiwe gutangira.
+      // 1) Use direct JSONP first. This does not depend on the iframe bridge.
       try {
-        const res = await fetchGasJsonp(authParams, 25000);
-        if (res && res.success && Array.isArray(res.reports)) {
-          allReports = res.reports;
-          saveLocalReports();
-          updateDashboardCounters();
-          filterAdminReportsList();
-          renderAllReportsTable();
-          showToast(`Raporo zose zavuguruwe neza: ${allReports.length}.`, "success");
-          return;
-        }
-        lastError = new Error((res && res.message) || "Server ntiyagaruye raporo.");
+        res = await fetchGasJsonp(authParams, 30000);
       } catch (err) {
         lastError = err;
-        console.warn("Admin JSONP loading failed:", err);
+        console.warn("Direct Google Sheets JSONP failed:", err);
       }
 
-      // 2) Niba JSONP yananiwe, gerageza bridge isanzwe.
-      try {
-        const res = await callGasBridge("allReports", {
-          username: currentAdminSession.username || "",
-          password: currentAdminSession.password || "",
-          adminCode: currentAdminSession.adminCode || ""
-        });
-        if (!res || !res.success || !Array.isArray(res.reports)) {
-          throw new Error((res && res.message) || "Server did not return reports.");
+      // 2) Fallback to the Apps Script iframe bridge.
+      if (!res || !res.success || !Array.isArray(res.reports)) {
+        try {
+          res = await callGasBridge("allReports", {
+            username: currentAdminSession.username || "",
+            password: currentAdminSession.password || "",
+            adminCode: currentAdminSession.adminCode || ""
+          }, 30000);
+        } catch (err) {
+          lastError = err;
+          console.warn("Google Apps Script bridge failed:", err);
         }
-        allReports = res.reports;
-        saveLocalReports();
-        updateDashboardCounters();
-        filterAdminReportsList();
-        renderAllReportsTable();
-        await loadActivityLogs();
-        showToast(`Raporo zose zavuguruwe neza: ${allReports.length}.`, "success");
-      } catch (err) {
-        console.warn("Refresh admin data err:", err);
-        const message = err?.message || lastError?.message || String(err);
-        showToast("Ntabwo raporo zakuwe kuri server: " + message, "error");
       }
+
+      if (!res || !res.success || !Array.isArray(res.reports)) {
+        const message = (res && res.message) || (lastError && lastError.message) || "Google Sheets ntiyagarutseho raporo.";
+        showToast("Ntabwo raporo zakuwe muri Google Sheets: " + message, "error");
+        return;
+      }
+
+      allReports = res.reports;
+      saveLocalReports();
+      updateDashboardCounters();
+      filterAdminReportsList();
+      renderAllReportsTable();
+      try { await loadActivityLogs(); } catch (err) { console.warn("Activity log load failed:", err); }
+      showToast(`Raporo zose zavanywe muri Google Sheets: ${allReports.length}.`, "success");
     }
 
     function filterAdminReportsList() {
@@ -3134,8 +3182,7 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode || ""
+          password: currentAdminSession?.password
         });
         showToast("Review yabitswe neza muri Google Sheets.", "success");
         logActionToIndex("Save Report Review", selectedReportForReview.service, `Saved review for Report ${selectedReportForReview.id}`);
@@ -3183,8 +3230,7 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode || ""
+          password: currentAdminSession?.password
         });
         showToast(`Review n'inama byoherejwe neza kuri email: ${reporterEmail}!`, "success");
         logActionToIndex("Send Review Email", selectedReportForReview.service, `Sent review email to ${reporterEmail} for Report ${selectedReportForReview.id}`);
@@ -3353,8 +3399,7 @@
         const res = await fetchGasJsonp({
           action: "getActivityLog",
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password,
-          adminCode: currentAdminSession?.adminCode || ""
+          password: currentAdminSession?.password
         });
         if (res && res.success && Array.isArray(res.activities)) {
           activityLogs = res.activities;
