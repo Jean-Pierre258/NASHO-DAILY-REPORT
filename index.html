@@ -1279,11 +1279,6 @@
       <span data-i18n="tab_admin_portal">Admin Portal & Review</span>
       <span class="badge-counter" id="totalReportsBadge">0</span>
     </button>
-
-    <button class="tab-btn" id="tabBtnAllHistory" onclick="switchMainTab('allHistory')">
-      <i data-lucide="history"></i>
-      <span data-i18n="tab_all_history">Amateka ya Raporo</span>
-    </button>
   </nav>
 
   <!-- =====================================================
@@ -1573,7 +1568,7 @@
       <div class="pane-header">
         <div>
           <h2 class="pane-title" data-i18n="admin_portal_title">Admin Management & Review Portal</h2>
-          <p class="pane-desc">Kureba raporo zose za services zose nta email isabwa, gutanga comment na recommendation, no kohereza feedback kuri email ya nyirayo, kugenzura ibyakorewe
+          <p class="pane-desc">Kureba raporo zose, gutanga review & feedback kuri email ya nyirayo, kugenzura ibyakorewe
             muri index, no gusesengura imibare.</p>
         </div>
 
@@ -1621,23 +1616,12 @@
               <span class="badge-counter" id="adminReportsCount">0</span>
             </div>
 
-            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-              <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, service, Report ID..."
-                oninput="filterAdminReportsList()" style="flex:1;min-width:220px;">
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+              <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, email, service..."
+                oninput="filterAdminReportsList()">
               <select id="adminReportFilterService" onchange="filterAdminReportsList()" style="width:160px;">
                 <option value="ALL">Services Zose</option>
               </select>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:14px;align-items:end;flex-wrap:wrap;">
-              <div style="flex:1;min-width:150px;">
-                <label for="adminReportsStartDate" style="font-size:12px;">Kuva ku itariki</label>
-                <input type="date" id="adminReportsStartDate" onchange="filterAdminReportsList()" style="width:100%;">
-              </div>
-              <div style="flex:1;min-width:150px;">
-                <label for="adminReportsEndDate" style="font-size:12px;">Kugeza ku itariki</label>
-                <input type="date" id="adminReportsEndDate" onchange="filterAdminReportsList()" style="width:100%;">
-              </div>
-              <button class="btn-secondary btn-sm" type="button" onclick="clearAdminReportDateRange()">Kuraho igihe</button>
             </div>
 
             <div style="max-height:560px;overflow-y:auto;padding-right:4px;" id="adminReportsListContainer">
@@ -1651,7 +1635,7 @@
               <div style="display:flex;align-items:center;gap:10px;">
                 <div class="card-icon-wrap blue"><i data-lucide="mail-plus"></i></div>
                 <div>
-                  <h3 id="reviewSelectedReportTitle">Comment & Recommendation kuri Report</h3>
+                  <h3 id="reviewSelectedReportTitle">Review & Subiza kuri Email</h3>
                   <p id="reviewSelectedReportSub" style="font-size:11.5px;color:var(--text-muted);">Hitamo raporo
                     ibumoso kugira ngo uyisuzume.</p>
                 </div>
@@ -1836,55 +1820,7 @@
     <!-- ===================================================
          5. ALL HISTORY TAB (PUBLIC / EXPORT)
     ==================================================== -->
-    <section id="sectionAllHistory" class="tab-pane">
-      <div class="pane-header">
-        <div>
-          <h2 class="pane-title" data-i18n="all_history_title">Amateka ya Raporo Zose (All Reports)</h2>
-          <p class="pane-desc">Shakisha, reba incamake, cyangwa wohereze amakuru muri CSV / JSON backup.</p>
-        </div>
-
-        <div class="header-tools">
-          <button class="btn-secondary" onclick="exportDataToCsv()">
-            <i data-lucide="download"></i>
-            <span>Export CSV</span>
-          </button>
-          <button class="btn-secondary" onclick="exportBackupJson()">
-            <i data-lucide="save"></i>
-            <span>Backup JSON</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="content-card">
-        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-          <input type="text" id="filterSearchInput" placeholder="Shakisha umukozi, serivisi, email..."
-            oninput="filterAllReportsTable()" style="flex:1;min-width:220px;">
-          <select id="filterServiceSelect" onchange="filterAllReportsTable()" style="width:200px;">
-            <option value="ALL">Serivisi Zose</option>
-          </select>
-          <input type="date" id="filterDateInput" onchange="filterAllReportsTable()" style="width:180px;">
-        </div>
-
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Itariki</th>
-                <th>Umukozi</th>
-                <th>Email</th>
-                <th>Serivisi</th>
-                <th>Shift</th>
-                <th>Status</th>
-                <th>Igikorwa</th>
-              </tr>
-            </thead>
-            <tbody id="allReportsTableBody">
-              <!-- Rendered table rows -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    
 
   </main>
 
@@ -3039,36 +2975,48 @@
       }
     }
 
-    async function loadAllAdminReportsWithoutEmail() {
-      if (!currentAdminSession) throw new Error("Admin session is missing.");
-      const params = {
-        action: "allReports",
-        username: currentAdminSession.username || "",
-        password: currentAdminSession.password || "",
-        adminCode: currentAdminSession.adminCode || ""
-      };
-      // Use the same HTTP/JSONP read pattern as My Reports.
-      // Admin authentication is done with username/password/adminCode, not reporter email.
-      try {
-        const jsonpResult = await fetchGasJsonp(params, 20000);
-        if (jsonpResult && jsonpResult.success && Array.isArray(jsonpResult.reports)) {
-          return jsonpResult;
-        }
-        throw new Error((jsonpResult && jsonpResult.message) || "Server did not return reports.");
-      } catch (jsonpError) {
-        console.warn("Admin JSONP read failed; trying bridge fallback:", jsonpError);
-        return callGasBridge("allReports", params, 30000);
-      }
-    }
-
     async function refreshAdminData() {
       if (!currentAdminSession) {
         openAdminLoginModal();
         return;
       }
-      showToast("Turimo kuzana raporo zose za services zose...", "info");
+
+      showToast("Turimo gukurura raporo zose za services kuri server...", "info");
+
+      const authParams = {
+        action: "allReports",
+        username: currentAdminSession.username || "",
+        password: currentAdminSession.password || "",
+        adminCode: currentAdminSession.adminCode || ""
+      };
+
+      let lastError = null;
+
+      // 1) Koresha JSONP mbere: ikora no mu gihe iframe bridge yananiwe gutangira.
       try {
-        const res = await loadAllAdminReportsWithoutEmail();
+        const res = await fetchGasJsonp(authParams, 25000);
+        if (res && res.success && Array.isArray(res.reports)) {
+          allReports = res.reports;
+          saveLocalReports();
+          updateDashboardCounters();
+          filterAdminReportsList();
+          renderAllReportsTable();
+          showToast(`Raporo zose zavuguruwe neza: ${allReports.length}.`, "success");
+          return;
+        }
+        lastError = new Error((res && res.message) || "Server ntiyagaruye raporo.");
+      } catch (err) {
+        lastError = err;
+        console.warn("Admin JSONP loading failed:", err);
+      }
+
+      // 2) Niba JSONP yananiwe, gerageza bridge isanzwe.
+      try {
+        const res = await callGasBridge("allReports", {
+          username: currentAdminSession.username || "",
+          password: currentAdminSession.password || "",
+          adminCode: currentAdminSession.adminCode || ""
+        });
         if (!res || !res.success || !Array.isArray(res.reports)) {
           throw new Error((res && res.message) || "Server did not return reports.");
         }
@@ -3078,26 +3026,17 @@
         filterAdminReportsList();
         renderAllReportsTable();
         await loadActivityLogs();
-        showToast(`Amakuru yavuguruwe neza: ${allReports.length} reports.`, "success");
+        showToast(`Raporo zose zavuguruwe neza: ${allReports.length}.`, "success");
       } catch (err) {
         console.warn("Refresh admin data err:", err);
-        showToast("Ntabwo reports zakuwe kuri server: " + (err.message || err), "error");
+        const message = err?.message || lastError?.message || String(err);
+        showToast("Ntabwo raporo zakuwe kuri server: " + message, "error");
       }
-    }
-
-    function clearAdminReportDateRange() {
-      const start = document.getElementById("adminReportsStartDate");
-      const end = document.getElementById("adminReportsEndDate");
-      if (start) start.value = "";
-      if (end) end.value = "";
-      filterAdminReportsList();
     }
 
     function filterAdminReportsList() {
       const q = (document.getElementById("adminReportSearchInput")?.value || "").toLowerCase().trim();
       const sFilter = document.getElementById("adminReportFilterService")?.value || "ALL";
-      const startDate = document.getElementById("adminReportsStartDate")?.value || "";
-      const endDate = document.getElementById("adminReportsEndDate")?.value || "";
       const container = document.getElementById("adminReportsListContainer");
       if (!container) return;
 
@@ -3109,10 +3048,7 @@
           String(r.service || "").toLowerCase().includes(q)
         );
         const matchS = (sFilter === "ALL") || (r.serviceKey === sFilter || r.service === sFilter);
-        const reportDate = String(r.date || r.reportDate || r.submittedAt || r.timestamp || "").slice(0, 10);
-        const matchStart = !startDate || (reportDate && reportDate >= startDate);
-        const matchEnd = !endDate || (reportDate && reportDate <= endDate);
-        return matchQ && matchS && matchStart && matchEnd;
+        return matchQ && matchS;
       });
 
       document.getElementById("adminReportsCount").textContent = filtered.length;
@@ -3247,7 +3183,8 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password
+          password: currentAdminSession?.password,
+          adminCode: currentAdminSession?.adminCode || ""
         });
         showToast(`Review n'inama byoherejwe neza kuri email: ${reporterEmail}!`, "success");
         logActionToIndex("Send Review Email", selectedReportForReview.service, `Sent review email to ${reporterEmail} for Report ${selectedReportForReview.id}`);
@@ -3416,7 +3353,8 @@
         const res = await fetchGasJsonp({
           action: "getActivityLog",
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password
+          password: currentAdminSession?.password,
+          adminCode: currentAdminSession?.adminCode || ""
         });
         if (res && res.success && Array.isArray(res.activities)) {
           activityLogs = res.activities;
