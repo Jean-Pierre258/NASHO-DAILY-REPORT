@@ -1573,7 +1573,7 @@
       <div class="pane-header">
         <div>
           <h2 class="pane-title" data-i18n="admin_portal_title">Admin Management & Review Portal</h2>
-          <p class="pane-desc">Kureba raporo zose, gutanga review & feedback kuri email ya nyirayo, kugenzura ibyakorewe
+          <p class="pane-desc">Kureba raporo zose za services zose nta email isabwa, gutanga comment na recommendation, no kohereza feedback kuri email ya nyirayo, kugenzura ibyakorewe
             muri index, no gusesengura imibare.</p>
         </div>
 
@@ -1621,12 +1621,23 @@
               <span class="badge-counter" id="adminReportsCount">0</span>
             </div>
 
-            <div style="display:flex;gap:8px;margin-bottom:14px;">
-              <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, email, service..."
-                oninput="filterAdminReportsList()">
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+              <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, service, Report ID..."
+                oninput="filterAdminReportsList()" style="flex:1;min-width:220px;">
               <select id="adminReportFilterService" onchange="filterAdminReportsList()" style="width:160px;">
                 <option value="ALL">Services Zose</option>
               </select>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;align-items:end;flex-wrap:wrap;">
+              <div style="flex:1;min-width:150px;">
+                <label for="adminReportsStartDate" style="font-size:12px;">Kuva ku itariki</label>
+                <input type="date" id="adminReportsStartDate" onchange="filterAdminReportsList()" style="width:100%;">
+              </div>
+              <div style="flex:1;min-width:150px;">
+                <label for="adminReportsEndDate" style="font-size:12px;">Kugeza ku itariki</label>
+                <input type="date" id="adminReportsEndDate" onchange="filterAdminReportsList()" style="width:100%;">
+              </div>
+              <button class="btn-secondary btn-sm" type="button" onclick="clearAdminReportDateRange()">Kuraho igihe</button>
             </div>
 
             <div style="max-height:560px;overflow-y:auto;padding-right:4px;" id="adminReportsListContainer">
@@ -1640,7 +1651,7 @@
               <div style="display:flex;align-items:center;gap:10px;">
                 <div class="card-icon-wrap blue"><i data-lucide="mail-plus"></i></div>
                 <div>
-                  <h3 id="reviewSelectedReportTitle">Review & Subiza kuri Email</h3>
+                  <h3 id="reviewSelectedReportTitle">Comment & Recommendation kuri Report</h3>
                   <p id="reviewSelectedReportSub" style="font-size:11.5px;color:var(--text-muted);">Hitamo raporo
                     ibumoso kugira ngo uyisuzume.</p>
                 </div>
@@ -2571,6 +2582,8 @@
       // Post to Google Apps Script
       try {
         const payload = {
+          // The Google Apps Script backend sends the submitted report notification
+          // to the three ADMIN_EMAILS configured in the server file.
           action: "submitReport",
           reportType: r.serviceKey,
           reportId: r.id,
@@ -2923,7 +2936,8 @@
           id: discId,
           reply: reply,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password
+          password: currentAdminSession?.password,
+          adminCode: currentAdminSession?.adminCode || ""
         });
         showToast("Igisubizo cyoherejwe kuri server.", "success");
         logActionToIndex("Reply to Discussion", "Communication", `Admin replied to message ID ${discId}`);
@@ -3027,64 +3041,65 @@
       }
     }
 
-    async function refreshAdminData() {
-      if (!currentAdminSession) {
-        openAdminLoginModal();
-        return;
-      }
-
-      showToast("Turimo gukura raporo zose muri Google Sheets...", "info");
-
-      const authParams = {
+    async function loadAllAdminReportsWithoutEmail() {
+      if (!currentAdminSession) throw new Error("Admin session is missing.");
+      const params = {
         action: "allReports",
         username: currentAdminSession.username || "",
         password: currentAdminSession.password || "",
         adminCode: currentAdminSession.adminCode || ""
       };
-
-      let lastError = null;
-      let res = null;
-
-      // 1) Use direct JSONP first. This does not depend on the iframe bridge.
+      // Use the same HTTP/JSONP read pattern as My Reports.
+      // Admin authentication is done with username/password/adminCode, not reporter email.
       try {
-        res = await fetchGasJsonp(authParams, 30000);
-      } catch (err) {
-        lastError = err;
-        console.warn("Direct Google Sheets JSONP failed:", err);
-      }
-
-      // 2) Fallback to the Apps Script iframe bridge.
-      if (!res || !res.success || !Array.isArray(res.reports)) {
-        try {
-          res = await callGasBridge("allReports", {
-            username: currentAdminSession.username || "",
-            password: currentAdminSession.password || "",
-            adminCode: currentAdminSession.adminCode || ""
-          }, 30000);
-        } catch (err) {
-          lastError = err;
-          console.warn("Google Apps Script bridge failed:", err);
+        const jsonpResult = await fetchGasJsonp(params, 20000);
+        if (jsonpResult && jsonpResult.success && Array.isArray(jsonpResult.reports)) {
+          return jsonpResult;
         }
+        throw new Error((jsonpResult && jsonpResult.message) || "Server did not return reports.");
+      } catch (jsonpError) {
+        console.warn("Admin JSONP read failed; trying bridge fallback:", jsonpError);
+        return callGasBridge("allReports", params, 30000);
       }
+    }
 
-      if (!res || !res.success || !Array.isArray(res.reports)) {
-        const message = (res && res.message) || (lastError && lastError.message) || "Google Sheets ntiyagarutseho raporo.";
-        showToast("Ntabwo raporo zakuwe muri Google Sheets: " + message, "error");
+    async function refreshAdminData() {
+      if (!currentAdminSession) {
+        openAdminLoginModal();
         return;
       }
+      showToast("Turimo kuzana raporo zose za services zose...", "info");
+      try {
+        const res = await loadAllAdminReportsWithoutEmail();
+        if (!res || !res.success || !Array.isArray(res.reports)) {
+          throw new Error((res && res.message) || "Server did not return reports.");
+        }
+        allReports = res.reports;
+        saveLocalReports();
+        updateDashboardCounters();
+        filterAdminReportsList();
+        renderAllReportsTable();
+        await loadActivityLogs();
+        showToast(`Amakuru yavuguruwe neza: ${allReports.length} reports.`, "success");
+      } catch (err) {
+        console.warn("Refresh admin data err:", err);
+        showToast("Ntabwo reports zakuwe kuri server: " + (err.message || err), "error");
+      }
+    }
 
-      allReports = res.reports;
-      saveLocalReports();
-      updateDashboardCounters();
+    function clearAdminReportDateRange() {
+      const start = document.getElementById("adminReportsStartDate");
+      const end = document.getElementById("adminReportsEndDate");
+      if (start) start.value = "";
+      if (end) end.value = "";
       filterAdminReportsList();
-      renderAllReportsTable();
-      try { await loadActivityLogs(); } catch (err) { console.warn("Activity log load failed:", err); }
-      showToast(`Raporo zose zavanywe muri Google Sheets: ${allReports.length}.`, "success");
     }
 
     function filterAdminReportsList() {
       const q = (document.getElementById("adminReportSearchInput")?.value || "").toLowerCase().trim();
       const sFilter = document.getElementById("adminReportFilterService")?.value || "ALL";
+      const startDate = document.getElementById("adminReportsStartDate")?.value || "";
+      const endDate = document.getElementById("adminReportsEndDate")?.value || "";
       const container = document.getElementById("adminReportsListContainer");
       if (!container) return;
 
@@ -3096,7 +3111,10 @@
           String(r.service || "").toLowerCase().includes(q)
         );
         const matchS = (sFilter === "ALL") || (r.serviceKey === sFilter || r.service === sFilter);
-        return matchQ && matchS;
+        const reportDate = String(r.date || r.reportDate || r.submittedAt || r.timestamp || "").slice(0, 10);
+        const matchStart = !startDate || (reportDate && reportDate >= startDate);
+        const matchEnd = !endDate || (reportDate && reportDate <= endDate);
+        return matchQ && matchS && matchStart && matchEnd;
       });
 
       document.getElementById("adminReportsCount").textContent = filtered.length;
@@ -3182,7 +3200,8 @@
           review: review,
           advice: advice,
           username: currentAdminSession?.username,
-          password: currentAdminSession?.password
+          password: currentAdminSession?.password,
+          adminCode: currentAdminSession?.adminCode || ""
         });
         showToast("Review yabitswe neza muri Google Sheets.", "success");
         logActionToIndex("Save Report Review", selectedReportForReview.service, `Saved review for Report ${selectedReportForReview.id}`);
