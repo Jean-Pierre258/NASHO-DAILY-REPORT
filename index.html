@@ -1209,15 +1209,6 @@
   text-shadow: none;
 }
 </style>
-
-<style id="nasho-admin-v3-overrides">
-/* V3: hide public report history as requested */
-.admin-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0;}
-.admin-stat{padding:16px;border:1px solid var(--border-color,#e2e8f0);border-radius:14px;background:var(--card-bg,#fff);}
-.admin-stat strong{display:block;font-size:28px;margin-top:6px;}
-.recycle-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #e5e7eb;}
-@media(max-width:700px){.recycle-row{align-items:flex-start;flex-direction:column;}}
-</style>
 </head>
 
 <body>
@@ -1289,6 +1280,10 @@
       <span class="badge-counter" id="totalReportsBadge">0</span>
     </button>
 
+    <button class="tab-btn" id="tabBtnAllHistory" onclick="switchMainTab('allHistory')">
+      <i data-lucide="history"></i>
+      <span data-i18n="tab_all_history">Amateka ya Raporo</span>
+    </button>
   </nav>
 
   <!-- =====================================================
@@ -1612,22 +1607,6 @@
         </button>
       </div>
 
-      <!-- V3 ADMIN DASHBOARD -->
-      <div class="content-card" style="margin-bottom:16px;">
-        <div class="card-header-line between"><h3><i data-lucide="layout-dashboard"></i> Dashboard ya Raporo Zose</h3><span class="version-tag">V3</span></div>
-        <div class="admin-dashboard-grid">
-          <div class="admin-stat"><span>Raporo zose</span><strong id="v3TotalReports">0</strong></div>
-          <div class="admin-stat"><span>Zitarasuzumwa</span><strong id="v3PendingReports">0</strong></div>
-          <div class="admin-stat"><span>Zasuzumwe</span><strong id="v3ReviewedReports">0</strong></div>
-          <div class="admin-stat"><span>Muri Recycle Bin</span><strong id="v3RecycleReports">0</strong></div>
-        </div>
-        <div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Raporo</th><th>Uwatanze</th><th>Email</th><th>Igihe</th><th>Serivisi</th><th>Igikorwa</th></tr></thead><tbody id="v3AllReportsBody"></tbody></table></div>
-      </div>
-      <div class="content-card" style="margin-bottom:16px;">
-        <div class="card-header-line between"><h3><i data-lucide="trash-2"></i> Recycle Bin</h3><button class="btn-secondary btn-sm" onclick="renderV3RecycleBin()">Refresh</button></div>
-        <div id="v3RecycleBinBody"><p style="color:var(--text-muted);">Nta raporo zasibwe.</p></div>
-      </div>
-
       <!-- 4A. SUBTAB: REPORT REVIEW & DIRECT EMAIL REPLY -->
       <div id="adminSubtabContentReview">
         <!-- Review Studio Layout -->
@@ -1642,12 +1621,23 @@
               <span class="badge-counter" id="adminReportsCount">0</span>
             </div>
 
-            <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
               <input type="text" id="adminReportSearchInput" placeholder="Shakisha izina, email, service..."
-                oninput="filterAdminReportsList()">
+                oninput="filterAdminReportsList()" style="flex:1;min-width:220px;">
               <select id="adminReportFilterService" onchange="filterAdminReportsList()" style="width:160px;">
                 <option value="ALL">Services Zose</option>
               </select>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;align-items:end;flex-wrap:wrap;">
+              <div style="flex:1;min-width:150px;">
+                <label for="adminReportsStartDate" style="font-size:12px;">Kuva ku itariki</label>
+                <input type="date" id="adminReportsStartDate" onchange="filterAdminReportsList()" style="width:100%;">
+              </div>
+              <div style="flex:1;min-width:150px;">
+                <label for="adminReportsEndDate" style="font-size:12px;">Kugeza ku itariki</label>
+                <input type="date" id="adminReportsEndDate" onchange="filterAdminReportsList()" style="width:100%;">
+              </div>
+              <button class="btn-secondary btn-sm" type="button" onclick="clearAdminReportDateRange()">Kuraho igihe</button>
             </div>
 
             <div style="max-height:560px;overflow-y:auto;padding-right:4px;" id="adminReportsListContainer">
@@ -1843,7 +1833,58 @@
       </div>
     </section>
 
+    <!-- ===================================================
+         5. ALL HISTORY TAB (PUBLIC / EXPORT)
+    ==================================================== -->
+    <section id="sectionAllHistory" class="tab-pane">
+      <div class="pane-header">
+        <div>
+          <h2 class="pane-title" data-i18n="all_history_title">Amateka ya Raporo Zose (All Reports)</h2>
+          <p class="pane-desc">Shakisha, reba incamake, cyangwa wohereze amakuru muri CSV / JSON backup.</p>
+        </div>
 
+        <div class="header-tools">
+          <button class="btn-secondary" onclick="exportDataToCsv()">
+            <i data-lucide="download"></i>
+            <span>Export CSV</span>
+          </button>
+          <button class="btn-secondary" onclick="exportBackupJson()">
+            <i data-lucide="save"></i>
+            <span>Backup JSON</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+          <input type="text" id="filterSearchInput" placeholder="Shakisha umukozi, serivisi, email..."
+            oninput="filterAllReportsTable()" style="flex:1;min-width:220px;">
+          <select id="filterServiceSelect" onchange="filterAllReportsTable()" style="width:200px;">
+            <option value="ALL">Serivisi Zose</option>
+          </select>
+          <input type="date" id="filterDateInput" onchange="filterAllReportsTable()" style="width:180px;">
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Itariki</th>
+                <th>Umukozi</th>
+                <th>Email</th>
+                <th>Serivisi</th>
+                <th>Shift</th>
+                <th>Status</th>
+                <th>Igikorwa</th>
+              </tr>
+            </thead>
+            <tbody id="allReportsTableBody">
+              <!-- Rendered table rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
   </main>
 
@@ -2563,11 +2604,6 @@
           throw new Error((result && result.message) || "Server did not confirm the report.");
         }
 
-        // V3: request a confirmation email to the reporter containing submitted details.
-        try {
-          await postToGas({ action: "sendReportReceiptEmail", reportId:r.id, reporterName:r.reporterName, reporterEmail:r.reporterEmail, service:r.service, date:r.date, shift:r.shift, serviceData:r.serviceData });
-        } catch(receiptErr) { console.warn("Reporter receipt email failed:", receiptErr); }
-
         logActionToIndex("Submit Daily Report", r.service, `Report ID ${r.id} submitted by ${r.reporterName} (${r.reporterEmail})`);
 
         if (result.status === "PARTIAL") {
@@ -3011,7 +3047,10 @@
       try {
         const res = await callGasBridge("allReports", {
           username: currentAdminSession.username,
-          password: currentAdminSession.password
+          password: currentAdminSession.password,
+          adminCode: currentAdminSession.adminCode || "",
+          startDate: document.getElementById("adminReportsStartDate")?.value || "",
+          endDate: document.getElementById("adminReportsEndDate")?.value || ""
         });
         if (!res || !res.success || !Array.isArray(res.reports)) {
           throw new Error((res && res.message) || "Server did not return reports.");
@@ -3021,8 +3060,6 @@
         updateDashboardCounters();
         filterAdminReportsList();
         renderAllReportsTable();
-        renderV3AdminDashboard();
-        renderV3RecycleBin();
         await loadActivityLogs();
         showToast(`Amakuru yavuguruwe neza: ${allReports.length} reports.`, "success");
       } catch (err) {
@@ -3031,39 +3068,23 @@
       }
     }
 
-    function v3IsDeleted(r){ return r.deleted === true || r.isDeleted === true || String(r.status||'').toLowerCase()==='deleted' || String(r.status||'').toLowerCase()==='recycled'; }
-    function v3ReportTime(r){ return r.submittedAt || r.createdAt || r.timestamp || r.date || 'Ntabwo bizwi'; }
-    function renderV3AdminDashboard(){
-      const active=allReports.filter(r=>!v3IsDeleted(r));
-      const deleted=allReports.filter(v3IsDeleted);
-      document.getElementById('v3TotalReports').textContent=active.length;
-      document.getElementById('v3PendingReports').textContent=active.filter(r=>!(r.adminReview&&(r.adminReview.review||r.adminReview.advice))).length;
-      document.getElementById('v3ReviewedReports').textContent=active.filter(r=>r.adminReview&&(r.adminReview.review||r.adminReview.advice)).length;
-      document.getElementById('v3RecycleReports').textContent=deleted.length;
-      const body=document.getElementById('v3AllReportsBody');
-      body.innerHTML=active.map(r=>`<tr><td>${escapeHtml(r.id||'')}</td><td>${escapeHtml(r.reporterName||r.employeeName||'')}</td><td>${escapeHtml(r.reporterEmail||r.email||'')}</td><td>${escapeHtml(v3ReportTime(r))}</td><td>${escapeHtml(r.service||'')}</td><td><button class="btn-primary-outline btn-sm" onclick="selectReportForReview('${String(r.id).replace(/'/g,"\\'")}')">Review</button> <button class="btn-danger-outline btn-sm" onclick="v3MoveToRecycleBin('${String(r.id).replace(/'/g,"\\'")}')">Siba</button></td></tr>`).join('') || '<tr><td colspan="6">Nta raporo.</td></tr>';
-      if(window.lucide) lucide.createIcons();
+    function clearAdminReportDateRange() {
+      const start = document.getElementById("adminReportsStartDate");
+      const end = document.getElementById("adminReportsEndDate");
+      if (start) start.value = "";
+      if (end) end.value = "";
+      filterAdminReportsList();
     }
-    async function v3MoveToRecycleBin(id){
-      const r=allReports.find(x=>String(x.id)===String(id)); if(!r)return;
-      if(!confirm('Urashaka gushyira iyi raporo muri Recycle Bin?'))return;
-      try{await postToGas({action:'deleteReport',reportId:id,username:currentAdminSession?.username,password:currentAdminSession?.password});}catch(e){showToast('Server ntiyemeje gusiba: '+e.message,'error');return;}
-      r.deleted=true; r.deletedAt=new Date().toISOString(); saveLocalReports(); renderV3AdminDashboard(); renderV3RecycleBin(); showToast('Raporo yashyizwe muri Recycle Bin.','success');
-    }
-    function renderV3RecycleBin(){
-      const body=document.getElementById('v3RecycleBinBody'); if(!body)return; const rows=allReports.filter(v3IsDeleted);
-      body.innerHTML=rows.map(r=>`<div class="recycle-row"><div><strong>${escapeHtml(r.id||'')}</strong><div>${escapeHtml(r.reporterName||r.employeeName||'')} • ${escapeHtml(r.reporterEmail||r.email||'')}</div><small>${escapeHtml(v3ReportTime(r))}</small></div><div><button class="btn-secondary btn-sm" onclick="v3RestoreReport('${String(r.id).replace(/'/g,"\\'")}')">Restore</button> <button class="btn-danger-outline btn-sm" onclick="v3DeletePermanent('${String(r.id).replace(/'/g,"\\'")}')">Delete Permanent</button></div></div>`).join('') || '<p style="color:var(--text-muted);">Nta raporo zasibwe.</p>';
-    }
-    async function v3RestoreReport(id){try{await postToGas({action:'restoreReport',reportId:id,username:currentAdminSession?.username,password:currentAdminSession?.password});const r=allReports.find(x=>String(x.id)===String(id));if(r){delete r.deleted;delete r.isDeleted;r.status='Submitted';}saveLocalReports();renderV3AdminDashboard();renderV3RecycleBin();showToast('Raporo yagaruwe.','success');}catch(e){showToast('Restore yanze: '+e.message,'error');}}
-    async function v3DeletePermanent(id){if(!confirm('Iyi raporo irasibwa burundu. Komeza?'))return;try{await postToGas({action:'permanentDeleteReport',reportId:id,username:currentAdminSession?.username,password:currentAdminSession?.password});allReports=allReports.filter(x=>String(x.id)!==String(id));saveLocalReports();renderV3AdminDashboard();renderV3RecycleBin();showToast('Raporo yasibwe burundu.','success');}catch(e){showToast('Delete permanent yanze: '+e.message,'error');}}
 
     function filterAdminReportsList() {
       const q = (document.getElementById("adminReportSearchInput")?.value || "").toLowerCase().trim();
       const sFilter = document.getElementById("adminReportFilterService")?.value || "ALL";
+      const startDate = document.getElementById("adminReportsStartDate")?.value || "";
+      const endDate = document.getElementById("adminReportsEndDate")?.value || "";
       const container = document.getElementById("adminReportsListContainer");
       if (!container) return;
 
-      let filtered = allReports.filter(r => { if (v3IsDeleted(r)) return false;
+      let filtered = allReports.filter(r => {
         const matchQ = !q || (
           String(r.reporterName || "").toLowerCase().includes(q) ||
           String(r.reporterEmail || "").toLowerCase().includes(q) ||
@@ -3071,7 +3092,10 @@
           String(r.service || "").toLowerCase().includes(q)
         );
         const matchS = (sFilter === "ALL") || (r.serviceKey === sFilter || r.service === sFilter);
-        return matchQ && matchS;
+        const reportDate = String(r.date || r.reportDate || r.submittedAt || r.timestamp || "").slice(0, 10);
+        const matchStart = !startDate || (reportDate && reportDate >= startDate);
+        const matchEnd = !endDate || (reportDate && reportDate <= endDate);
+        return matchQ && matchS && matchStart && matchEnd;
       });
 
       document.getElementById("adminReportsCount").textContent = filtered.length;
@@ -3477,7 +3501,7 @@
         return;
       }
 
-      tbody.innerHTML = allReports.filter(r => !v3IsDeleted(r)).map((r, idx) => {
+      tbody.innerHTML = allReports.map((r, idx) => {
         const hasReview = r.adminReview && (r.adminReview.review || r.adminReview.advice);
         return `
           <tr>
@@ -3510,7 +3534,7 @@
       const tbody = document.getElementById("allReportsTableBody");
       if (!tbody) return;
 
-      const filtered = allReports.filter(r => { if (v3IsDeleted(r)) return false;
+      const filtered = allReports.filter(r => {
         const matchQ = !q || (
           String(r.reporterName).toLowerCase().includes(q) ||
           String(r.reporterEmail).toLowerCase().includes(q) ||
@@ -3647,6 +3671,8 @@
       if (tab === "admin") {
         switchAdminSubtab("review");
         filterAdminReportsList();
+      } else if (tab === "allHistory") {
+        renderAllReportsTable();
       } else if (tab === "discussion") {
         loadDiscussions();
       }
@@ -3949,9 +3975,9 @@
 
     /* 14. LANGUAGE SYSTEM (Kinyarwanda, English & French) */
     const LANGUAGE_TEXT = {
-      rw:{tab_new_report:"Tanga Raporo Nshya",tab_my_reports:"Raporo Zanjye",tab_discussion:"Igice cyo Kuganira",tab_admin_portal:"Admin Portal & Review",form_title:"Kuzuza Raporo y'Umunsi ya Serivisi",form_subtitle:"Injiza amakuru y'umukozi, hitamo serivisi wakozemo uyu munsi, maze wuzuze ibipimo.",staff_info_title:"1. Amakuru y'Umukozi",staff_name_label:"Izina ry'Umukozi *",staff_email_label:"Email y'Umukozi *",staff_phone_label:"Nimero ya Telefone *",report_date_label:"Itariki ya Raporo *",shift_label:"Shift *",selected_service_label:"Serivisi Yahiswemo *",select_service_title:"2. Hitamo Service",btn_review_and_submit:"REBA RAPORO",my_reports_title:"Raporo Zanjye",discussion_title:"Igice cyo Kuganira & Ubutumwa",admin_portal_title:"Admin Management & Review Portal",modal_back:"Subira Guhindura",modal_submit:"OHEREZA RAPORO"},
-      en:{tab_new_report:"New Report",tab_my_reports:"My Reports",tab_discussion:"Discussion",tab_admin_portal:"Admin Portal & Review",form_title:"Complete Daily Service Report",form_subtitle:"Enter staff information, select the service you worked in today, and complete the indicators.",staff_info_title:"1. Staff Information",staff_name_label:"Staff Name *",staff_email_label:"Staff Email *",staff_phone_label:"Phone Number *",report_date_label:"Report Date *",shift_label:"Shift *",selected_service_label:"Selected Service *",select_service_title:"2. Select Service",btn_review_and_submit:"VIEW REPORT",my_reports_title:"My Reports",discussion_title:"Discussion & Messages",admin_portal_title:"Admin Management & Review Portal",modal_back:"Back to Edit",modal_submit:"SUBMIT REPORT"},
-      fr:{tab_new_report:"Nouveau rapport",tab_my_reports:"Mes rapports",tab_discussion:"Discussion",tab_admin_portal:"Portail Admin & Révision",form_title:"Remplir le rapport quotidien des services",form_subtitle:"Saisissez les informations du personnel, choisissez le service du jour et complétez les indicateurs.",staff_info_title:"1. Informations du personnel",staff_name_label:"Nom du personnel *",staff_email_label:"Email du personnel *",staff_phone_label:"Numéro de téléphone *",report_date_label:"Date du rapport *",shift_label:"Service / Shift *",selected_service_label:"Service sélectionné *",select_service_title:"2. Choisissez le service",btn_review_and_submit:"VOIR LE RAPPORT",my_reports_title:"Mes rapports",discussion_title:"Discussion et messages",admin_portal_title:"Portail de gestion et de révision Admin",modal_back:"Retour à la modification",modal_submit:"ENVOYER LE RAPPORT"}
+      rw:{tab_new_report:"Tanga Raporo Nshya",tab_my_reports:"Raporo Zanjye",tab_discussion:"Igice cyo Kuganira",tab_admin_portal:"Admin Portal & Review",tab_all_history:"Amateka ya Raporo",form_title:"Kuzuza Raporo y'Umunsi ya Serivisi",form_subtitle:"Injiza amakuru y'umukozi, hitamo serivisi wakozemo uyu munsi, maze wuzuze ibipimo.",staff_info_title:"1. Amakuru y'Umukozi",staff_name_label:"Izina ry'Umukozi *",staff_email_label:"Email y'Umukozi *",staff_phone_label:"Nimero ya Telefone *",report_date_label:"Itariki ya Raporo *",shift_label:"Shift *",selected_service_label:"Serivisi Yahiswemo *",select_service_title:"2. Hitamo Service",btn_review_and_submit:"REBA RAPORO",my_reports_title:"Raporo Zanjye",discussion_title:"Igice cyo Kuganira & Ubutumwa",admin_portal_title:"Admin Management & Review Portal",all_history_title:"Amateka ya Raporo Zose",modal_back:"Subira Guhindura",modal_submit:"OHEREZA RAPORO"},
+      en:{tab_new_report:"New Report",tab_my_reports:"My Reports",tab_discussion:"Discussion",tab_admin_portal:"Admin Portal & Review",tab_all_history:"Report History",form_title:"Complete Daily Service Report",form_subtitle:"Enter staff information, select the service you worked in today, and complete the indicators.",staff_info_title:"1. Staff Information",staff_name_label:"Staff Name *",staff_email_label:"Staff Email *",staff_phone_label:"Phone Number *",report_date_label:"Report Date *",shift_label:"Shift *",selected_service_label:"Selected Service *",select_service_title:"2. Select Service",btn_review_and_submit:"VIEW REPORT",my_reports_title:"My Reports",discussion_title:"Discussion & Messages",admin_portal_title:"Admin Management & Review Portal",all_history_title:"All Report History",modal_back:"Back to Edit",modal_submit:"SUBMIT REPORT"},
+      fr:{tab_new_report:"Nouveau rapport",tab_my_reports:"Mes rapports",tab_discussion:"Discussion",tab_admin_portal:"Portail Admin & Révision",tab_all_history:"Historique des rapports",form_title:"Remplir le rapport quotidien des services",form_subtitle:"Saisissez les informations du personnel, choisissez le service du jour et complétez les indicateurs.",staff_info_title:"1. Informations du personnel",staff_name_label:"Nom du personnel *",staff_email_label:"Email du personnel *",staff_phone_label:"Numéro de téléphone *",report_date_label:"Date du rapport *",shift_label:"Service / Shift *",selected_service_label:"Service sélectionné *",select_service_title:"2. Choisissez le service",btn_review_and_submit:"VOIR LE RAPPORT",my_reports_title:"Mes rapports",discussion_title:"Discussion et messages",admin_portal_title:"Portail de gestion et de révision Admin",all_history_title:"Historique de tous les rapports",modal_back:"Retour à la modification",modal_submit:"ENVOYER LE RAPPORT"}
     };
     const FIXED_TEXT={
       rw:{staffHint:"Aya makuru azakoreshwa no koherezwa kuri email yawe ukimara gutanga raporo.",emailHint:"Iyi email ni yo Admin azagusubirizaho.",serviceHint:"Kanda kuri serivisi imwe kugira ngo ibipimo byayo bifunguke.",activeDesc:"Uzuza imibare n'ibisobanuro by'uyu munsi.",draft:"Draft ibikwa ako kanya kuri mudasobwa yawe.",preview:'Kanda "Reba Raporo" kugira ngo ubone amakuru wanditse mbere yo kuyohereza.',selectedPlaceholder:"Hitamo serivisi hepfo",namePlaceholder:"Urugero: Jean Pierre Nsabimana",numberPlaceholder:"Andika umubare"},
