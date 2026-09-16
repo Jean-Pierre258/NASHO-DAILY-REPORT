@@ -1175,26 +1175,135 @@
       }
     }
 
-    /* Print styling */
+    /* =====================================================
+       PRINT / PDF READY REPORT
+    ====================================================== */
+    .print-report-btn {
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .print-report-header { display:none; }
+    .print-report-footer { display:none; }
+
+    @page { size: A4; margin: 14mm 13mm 16mm; }
+
     @media print {
-      body * {
-        visibility: hidden;
+      html, body {
+        background:#fff !important;
+        color:#111827 !important;
+        margin:0 !important;
+        padding:0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
+      body * { visibility:hidden !important; }
       #printableReportContent,
-      #printableReportContent * {
-        visibility: visible;
+      #printableReportContent * { visibility:visible !important; }
+
+      #modalReportView {
+        position:static !important;
+        display:block !important;
+        background:#fff !important;
+        padding:0 !important;
+        overflow:visible !important;
       }
+      #modalReportView .modal-dialog {
+        width:100% !important;
+        max-width:none !important;
+        max-height:none !important;
+        margin:0 !important;
+        border:0 !important;
+        border-radius:0 !important;
+        box-shadow:none !important;
+        overflow:visible !important;
+      }
+      #modalReportView .modal-header,
+      #modalReportView .modal-footer,
+      #reportReviewFooter,
+      .no-print { display:none !important; }
 
       #printableReportContent {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
+        position:relative !important;
+        width:100% !important;
+        min-height:0 !important;
+        padding:0 !important;
+        margin:0 !important;
+        background:#fff !important;
+        box-shadow:none !important;
       }
-
-      .no-print {
-        display: none !important;
+      .print-report-header {
+        display:flex !important;
+        align-items:center;
+        justify-content:space-between;
+        gap:20px;
+        border-bottom:2px solid #059669;
+        padding:0 0 10px;
+        margin-bottom:14px;
+      }
+      .print-report-header h1 {
+        font-size:18px !important;
+        line-height:1.2 !important;
+        margin:0 !important;
+        color:#0f172a !important;
+        letter-spacing:.2px;
+      }
+      .print-report-header p {
+        font-size:10px !important;
+        margin:3px 0 0 !important;
+        color:#64748b !important;
+      }
+      .print-report-footer {
+        display:flex !important;
+        justify-content:space-between;
+        gap:15px;
+        border-top:1px solid #cbd5e1;
+        margin-top:18px;
+        padding-top:8px;
+        font-size:9px !important;
+        color:#64748b !important;
+      }
+      #printableReportContent table {
+        width:100% !important;
+        border-collapse:collapse !important;
+        page-break-inside:auto;
+        font-size:10.5px !important;
+      }
+      #printableReportContent thead { display:table-header-group; }
+      #printableReportContent tr { page-break-inside:avoid; page-break-after:auto; }
+      #printableReportContent th,
+      #printableReportContent td {
+        border:1px solid #cbd5e1 !important;
+        padding:6px 7px !important;
+        vertical-align:top !important;
+      }
+      #printableReportContent th {
+        background:#f1f5f9 !important;
+        color:#0f172a !important;
+        font-weight:800 !important;
+      }
+      #printableReportContent h4 {
+        page-break-after:avoid;
+        color:#0f172a !important;
+      }
+      #printableReportContent .form-grid {
+        display:grid !important;
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        gap:8px !important;
+        background:#f8fafc !important;
+        border:1px solid #cbd5e1 !important;
+        border-radius:6px !important;
+        padding:9px !important;
+      }
+      #printableReportContent .version-tag {
+        border:1px solid #cbd5e1 !important;
+        background:#f8fafc !important;
+        color:#0f172a !important;
+      }
+      #printableReportContent #viewModalAdminReviewBox {
+        background:#f8fafc !important;
+        border:1px solid #cbd5e1 !important;
+        border-radius:6px !important;
+        page-break-inside:avoid;
       }
     }
   </style>
@@ -1935,6 +2044,16 @@
       </div>
 
       <div class="modal-body" id="printableReportContent">
+        <div class="print-report-header">
+          <div>
+            <h1>NASHO HEALTH CENTER</h1>
+            <p>Daily Service Report • Official Report Copy</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;font-weight:800;color:#475569;">REPORT ID</div>
+            <div style="font-size:13px;font-weight:900;color:#0f172a;" id="printHeaderReportId">—</div>
+          </div>
+        </div>
         <div
           style="border-bottom:2px solid #059669;padding-bottom:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
           <div>
@@ -1987,9 +2106,17 @@
           </div>
           <div style="font-size:11px;color:#64748b;margin-top:8px;" id="viewModalReviewMeta"></div>
         </div>
+        <div class="print-report-footer">
+          <span>NASHO Health Center • Daily Service Report</span>
+          <span>Generated: <span id="printGeneratedAt">—</span></span>
+        </div>
       </div>
 
       <div class="modal-footer" id="reportReviewFooter">
+        <button class="btn-secondary print-report-btn" type="button" onclick="printCurrentReport()">
+          <i data-lucide="printer"></i>
+          <span>PRINT / SAVE PDF</span>
+        </button>
         <button class="btn-secondary" type="button" id="btnModalBackEdit" onclick="backToFormEdit()">
           <i data-lucide="arrow-left"></i>
           <span data-i18n="modal_back">Subira Guhindura</span>
@@ -2010,7 +2137,7 @@
   ====================================================== -->
   <script>
     /* 1. CONFIGURATION & SERVICES DEFINITIONS */
-    const API_URL = "https://script.google.com/macros/s/AKfycbxhQ1ibqGOXcd7jJ8AZpOhLEY46_Pr8VTkLkclY2i-18O3N_1qwr71gWm4-ycJYg8AmXQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzoliBoS4QMJ-p426DaVzYr0y8EfpzLJGMKyyjTtkw10op1J__-1lnigQRE2GV5zkSiTg/exec";
 
     const SERVICES_DATA = {
       OPD: {
@@ -2630,6 +2757,20 @@
     function backToFormEdit() {
       closeReportViewModal();
       showToast("Subira muri form maze uhindure ibyo wifuza.", "info");
+    }
+
+    function printCurrentReport() {
+      const reportId = document.getElementById("viewModalReportId")?.textContent || "NASHO-REPORT";
+      const headerId = document.getElementById("printHeaderReportId");
+      const generatedAt = document.getElementById("printGeneratedAt");
+      if (headerId) headerId.textContent = reportId;
+      if (generatedAt) generatedAt.textContent = new Date().toLocaleString("rw-RW", {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit"
+      });
+
+      // The browser print dialog lets the user choose “Save as PDF”.
+      requestAnimationFrame(() => window.print());
     }
 
     function closeReportViewModal() {
