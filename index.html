@@ -314,16 +314,13 @@
       <i data-lucide="user-check"></i><span data-i18n="tab_my_reports">Raporo Zanjye</span>
       <span class="badge-counter" id="myReportsBadge">0</span>
     </button>
-    <button class="tab-btn" id="tabBtnDiscussion" onclick="switchMainTab('discussion')">
+    <button class="tab-btn" id="tabBtnDiscussion" onclick="window.location.href='https://disccussion-nasho-hc.vercel.app/'">
       <i data-lucide="message-square-text"></i><span data-i18n="tab_discussion">Igice cyo Kuganira</span>
       <span class="badge-counter" id="discussionBadge">0</span>
     </button>
     <button class="tab-btn" id="tabBtnAdmin" onclick="switchMainTab('admin')">
       <i data-lucide="shield-alert"></i><span data-i18n="tab_admin_portal">Admin Portal & Review</span>
       <span class="badge-counter" id="totalReportsBadge">0</span>
-    </button>
-    <button class="tab-btn" id="tabBtnAllHistory" onclick="switchMainTab('allHistory')">
-      <i data-lucide="history"></i><span data-i18n="tab_all_history">Amateka ya Raporo</span>
     </button>
   </nav>
 
@@ -690,32 +687,7 @@
       </div>
     </section>
 
-    <!-- 5. ALL HISTORY TAB -->
-    <section id="sectionAllHistory" class="tab-pane">
-      <div class="pane-header">
-        <div>
-          <h2 class="pane-title" data-i18n="all_history_title">Amateka ya Raporo Zose (All Reports)</h2>
-          <p class="pane-desc">Shakisha, reba incamake, cyangwa wohereze amakuru muri CSV / JSON backup.</p>
-        </div>
-        <div class="header-tools">
-          <button class="btn-secondary" onclick="exportDataToCsv()"><i data-lucide="download"></i><span>Export CSV</span></button>
-          <button class="btn-secondary" onclick="exportBackupJson()"><i data-lucide="save"></i><span>Backup JSON</span></button>
-        </div>
-      </div>
-      <div class="content-card">
-        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-          <input type="text" id="filterSearchInput" placeholder="Shakisha umukozi, serivisi, email..." oninput="filterAllReportsTable()" style="flex:1;min-width:220px;">
-          <select id="filterServiceSelect" onchange="filterAllReportsTable()" style="width:200px;"><option value="ALL">Serivisi Zose</option></select>
-          <input type="date" id="filterDateInput" onchange="filterAllReportsTable()" style="width:180px;">
-        </div>
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead><tr><th>Itariki</th><th>Umukozi</th><th>Email</th><th>Serivisi</th><th>Shift</th><th>Status</th><th>Igikorwa</th></tr></thead>
-            <tbody id="allReportsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+
 
   </main>
 
@@ -1396,7 +1368,7 @@
       document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active")); document.querySelectorAll(".main-tabs .tab-btn").forEach(b => b.classList.remove("active"));
       const target = document.getElementById("section" + tab.charAt(0).toUpperCase() + tab.slice(1)); const btn = document.getElementById("tabBtn" + tab.charAt(0).toUpperCase() + tab.slice(1));
       if (target) target.classList.add("active"); if (btn) btn.classList.add("active");
-      if (tab === "admin") { switchAdminSubtab("review"); filterAdminReportsList(); } else if (tab === "allHistory") { renderAllReportsTable(); } else if (tab === "discussion") { loadDiscussions(); }
+      if (tab === "admin") { switchAdminSubtab("review"); filterAdminReportsList(); } else if (tab === "discussion") { loadDiscussions(); }
     }
     function updateDashboardCounters() { const totalBadge = document.getElementById("totalReportsBadge"); if (totalBadge) totalBadge.textContent = allReports.length; }
     function loadLocalOrRemoteReports() { allReports = []; updateDashboardCounters(); renderAllReportsTable(); }
